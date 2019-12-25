@@ -1,0 +1,120 @@
+version: '3'
+services:
+  mysql:
+    restart: unless-stopped
+    image: {mysql}
+    container_name: mariadb10.4.7
+    volumes:
+      - /data/mysql/data:/var/lib/mysql
+      - /etc/mysql:/etc/mysql
+      - /var/log/mysql:/var/log/mysql
+    ports:
+    - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=hello
+    network_mode: "host"
+
+  rabbitmq:
+    restart: unless-stopped
+    image: {rabbitmq}
+    container_name: rabbitmq.3.7.17-management
+    volumes:
+      - /data/rabbitmq/data:/var/lib/rabbitmq
+      - /etc/rabbitmq:/etc/rabbitmq
+      - /var/log/rabbitmq:/var/log/rabbitmq
+    environment:
+      - RABBITMQ_ERLANG_COOKIE={cookie}
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+      - RABBITMQ_DEFAULT_VHOST=my_vhost
+    ports:
+      - "4396:4396"
+      - "5671:5671"
+      - "5672:5672"
+      - "15671:15671"
+      - "15672:15672"
+      - "25672:25672"
+    network_mode: "host"
+
+  redis:
+    restart: unless-stopped
+    image: {redis}
+    container_name: redis.5.0.5
+    volumes:
+      - /data/redis/data:/data
+      - /etc/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - /var/log/redis:/var/log/redis
+    ports:
+      - "6379:6379"
+    command:
+      - redis-server
+      - /usr/local/etc/redis/redis.conf
+    network_mode: "host"
+
+  consul:
+    restart: unless-stopped
+    image: {consul}
+    container_name: consul.1.5.3
+    volumes:
+      - /data/consul/data:/consul/data
+      - /data/consul/config:/consul/config
+      - /var/log/consul:/var/log/consul
+#    environment:
+#      - CONSUL_BIND_INTERFACE=enp0s31f6
+    ports:
+      - 8300:8300
+      - 8301:8301
+      - 8301:8301/udp
+      - 8302:8302
+      - 8302:8302/udp
+      - 8400:8400
+      - 8500:8500
+      - 53:53/udp
+    command: agent -server -bind=127.0.0.1 -client=0.0.0.0 -node=auto -bootstrap-expect=1 -ui
+    network_mode: "host"
+
+#  mongo:
+#    restart: unless-stopped
+#    image: mongo:4.2.0
+#    container_name: mongo
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: root
+#      MONGO_INITDB_ROOT_PASSWORD: Ft_Mongo_123
+#    volumes:
+#      - /data/mongodb/mongo/db:/data/db
+#      - /etc/mongodb/mongo/config:/data/configdb
+#    network_mode: "host"
+#    command: mongod --config /data/configdb/mongo.conf
+  
+  mongo1:
+    restart: unless-stopped
+    image: {mongo}
+    container_name: mongo1
+    volumes:
+      - /data/mongodb/mongo1/db:/data/db
+      - /etc/mongodb/mongo1/config:/data/configdb
+      - /etc/mongodb/mongo1/keyfile:/data/keyfile
+    network_mode: "host"
+    command: mongod --config /data/configdb/mongo1.conf
+
+  mongo2:
+    restart: unless-stopped
+    image: {mongo}
+    container_name: mongo2
+    volumes:
+      - /data/mongodb/mongo2/db:/data/db
+      - /etc/mongodb/mongo2/config:/data/configdb
+      - /etc/mongodb/mongo2/keyfile:/data/keyfile
+    network_mode: "host"
+    command: mongod --config /data/configdb/mongo2.conf
+
+  mongo3:
+    restart: unless-stopped
+    image: {mongo}
+    container_name: mongo3
+    volumes:
+      - /data/mongodb/mongo3/db:/data/db
+      - /etc/mongodb/mongo3/config:/data/configdb
+      - /etc/mongodb/mongo3/keyfile:/data/keyfile
+    network_mode: "host"
+    command: mongod --config /data/configdb/mongo3.conf

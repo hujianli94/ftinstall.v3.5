@@ -1,0 +1,41 @@
+version: '3'
+services:
+  cmdb_event:
+    restart: unless-stopped
+    image: {cmdb_event}
+    container_name: cmdb_event
+    ports:
+      - 10009:10009
+    volumes:
+      - /var/log/ftcloud/cmdb/cmdb_event/logs:/ftcloud/cmdb/cmdb_event/logs
+    network_mode: host
+    
+  cmdb_model:
+    restart: unless-stopped
+    image: {cmdb_model}
+    container_name: cmdb_model
+    ports:
+      - 10006:10006
+    volumes:
+      - /var/log/ftcloud/cmdb/cmdb_model/logs:/ftcloud/cmdb/cmdb_model/logs
+    network_mode: host
+  
+  cmdb_resource:
+    restart: unless-stopped
+    image: {cmdb_resource}
+    container_name: cmdb_resource
+    ports:
+      - 10007:10007
+    volumes:
+      - /var/log/ftcloud/cmdb/cmdb_resource/logs:/ftcloud/cmdb/cmdb_resource/logs
+    network_mode: host
+  
+  cmdb_scene:
+    restart: unless-stopped
+    image: {cmdb_scene}
+    container_name: cmdb_scene
+    ports:
+      - 10008:10008
+    volumes:
+      - /var/log/ftcloud/cmdb/cmdb_scene/logs:/ftcloud/cmdb/cmdb_scene/logs
+    network_mode: host

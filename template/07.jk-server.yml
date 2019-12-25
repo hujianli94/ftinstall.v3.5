@@ -1,0 +1,34 @@
+version: "3"
+#futong-cm-zuul
+services:
+  futong-cm-auto-prometheus:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-auto-prometheus}
+        ports:
+            - "9090:9090"
+        volumes:
+            - /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+            - /etc/prometheus/alert.rules:/etc/prometheus/alert.rules
+        command:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--web.enable-lifecycle'
+        network_mode: "host"
+        container_name: futong-cm-auto-prometheus
+
+  futong-cm-auto-alertmanager:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-auto-alertmanager}
+        ports:
+            - "9093:9093"
+        volumes:
+            - /etc/prometheus/config.yml:/etc/alertmanager/config.yml
+        network_mode: "host"
+        container_name: futong-cm-auto-alertmanager
+
+  futong-cm-auto-pushgateway:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-auto-pushgateway}
+        ports:
+            - "9091:9091"
+        network_mode: "host"
+        container_name: futong-cm-auto-pushgateway

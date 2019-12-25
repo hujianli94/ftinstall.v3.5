@@ -1,0 +1,13 @@
+version: '3'
+services:
+  nginx:
+    restart: unless-stopped
+    image: 119.254.93.246:15005/public/nginx:1.17.5
+    volumes:
+      - /etc/nginx:/etc/nginx
+      - /var/log/nginx:/var/log/nginx
+      - /usr/share/nginx/html:/usr/share/nginx/html
+    ports:
+    - "16006:16006"
+    network_mode: "host"
+

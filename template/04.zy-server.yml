@@ -1,0 +1,84 @@
+version: "3"
+#futong-cm-resource-aggregation
+services:
+
+            
+    futong-cm-resource-xxljob:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-resource-xxljob}
+        ports:
+            - "30010:30010"
+        network_mode: "host"
+        container_name: futong_cm_resource_xxljob
+        volumes:
+            - /var/log/ftcloud/zy/futong-cm-xxlJob:/logs/futong-cm-xxlJob/
+
+    futong-cm-resource-aggregation:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-resource-aggregation}
+        ports:
+            - "30010:30010"
+        network_mode: "host"
+        container_name: futong_cm_resource_aggregation
+        volumes:
+            - /var/log/ftcloud/zy/futong-cm-resource-aggregation:/logs/futong-cm-resource-aggregation/
+
+    futong-cm-resource-compute:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-resource-compute}
+        ports:
+            - "30011:30011"
+        network_mode: "host"
+        volumes:
+            - /var/log/ftcloud/zy/futong-cm-resource-compute:/logs/futong-cm-resource-compute/
+        container_name: futong_cm_resource_compute
+
+    futong-cm-resource-elastic:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-resource-elastic}
+        ports:
+            - "30012:30012"
+        network_mode: "host"
+        container_name: futong_cm_resource_elastic
+        volumes:
+            - /var/log/ftcloud/zy/futong-cm-resource-elastic:/logs/futong-cm-resource-elastic/
+
+    futong-cm-resource-esi:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-resource-esi}
+        ports:
+            - "30013:30013"
+        network_mode: "host"
+        container_name: futong_cm_resource_esi
+        volumes:
+            - /var/log/ftcloud/zy/futong-cm-resource-esi:/logs/futong-cm-resource-esi/
+
+    futong-cm-resource-network:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-resource-network}
+        ports:
+            - "30014:30014"
+        network_mode: "host"
+        container_name: futong_cm_resource_network
+        volumes:
+            - /var/log/ftcloud/zy/futong-cm-resource-network:/logs/futong-cm-resource-network/
+
+    futong-cm-resource-rds:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-resource-rds}
+        ports:
+            - "30015:30015"
+        network_mode: "host"
+        container_name: futong_cm_resource_rds
+        volumes:
+            - /var/log/ftcloud/zy/futong-cm-resource-rds:/logs/futong-cm-resource-rds/
+
+    futong-cm-resource-nat:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-resource-nat}
+        ports:
+            - "30018:30018"
+        network_mode: "host"
+        container_name: futong_cm_resource_nat
+        volumes:
+            - /var/log/ftcloud/zy/futong-cm-resource-nat:/logs/futong-cm-resource-nat/

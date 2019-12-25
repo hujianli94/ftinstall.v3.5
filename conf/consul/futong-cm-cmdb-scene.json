@@ -1,0 +1,14 @@
+{
+  "service": {
+    "name": "futong-cm-cmdb-scene",
+    "tags": ["futong-cm-cmdb-scene"],
+    "address": "172.16.61.21",
+    "port": 10008,
+    "checks": [
+      {
+        "http": "http://172.16.61.21:10008/check/cmdb-scene/",
+        "interval": "10s"
+      }
+    ]
+  }
+}

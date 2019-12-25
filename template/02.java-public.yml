@@ -1,0 +1,39 @@
+version: "3"
+#futong-cm-resource-aggregation
+services:
+
+    futong-cm-config:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-config}
+        network_mode: host
+        container_name: futong_cm_config
+
+    futong-cm-zuul:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-zuul}
+        network_mode: host
+        container_name: futong_cm_zuul
+        volumes:
+            - /var/log/ftcloud/futong-cm-zuul:/logs/futong-cm-zuul/
+        depends_on:
+            - futong-cm-config
+
+    futong-cm-sso:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-sso}
+        network_mode: host
+        container_name: futong_cm_sso
+        volumes:
+            - /var/log/ftcloud/futong-cm-sso:/logs/futong-cm-sso/
+        depends_on:
+            - futong-cm-zuul
+
+    futong-cm-ucenter:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-ucenter}
+        network_mode: host
+        container_name: futong_cm_ucenter
+        volumes:
+            - /var/log/ftcloud/futong-cm-ucenter:/logs/futong-cm-ucenter/
+        depends_on:
+            - futong-cm-zuul

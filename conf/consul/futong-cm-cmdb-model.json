@@ -1,0 +1,14 @@
+{
+  "service": {
+    "name": "futong-cm-cmdb-model",
+    "tags": ["futong-cm-cmdb-model"],
+    "address": "172.16.61.21",
+    "port": 10006,
+    "checks": [
+      {
+        "http": "http://172.16.61.21:10006/check/cmdb-model/",
+        "interval": "10s"
+      }
+    ]
+  }
+}

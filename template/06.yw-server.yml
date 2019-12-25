@@ -1,0 +1,61 @@
+version: '3'
+services:
+  futong-cm-source-arrangement:
+    image: {futong-cm-source-arrangement}
+#    build: .
+#    restart: unless-stopped
+    network_mode: "host"
+    command: bash -c "python /code/resource_arrangement/manage.py makemigrations && python /code/resource_arrangement/manage.py migrate && cd /code/resource_arrangement && celery -A resource_arrangement worker -l info --detach --pidfile= && uwsgi --ini uwsgi.ini"
+#    command: bash -c "python ./resource_arrangement/manage.py makemigrations && python ./resource_arrangement/manage.py migrate && cd resource_arrangement && uwsgi --ini uwsgi.ini"
+
+    volumes:
+#      - .:/code
+      - /var/log/ftcloud/yw:/var/log/ftcloud/yw
+    ports:
+      - "11000:11000"
+  
+  futong-cm-blueprint:
+    image: {futong-cm-blueprint}
+    command: bash -c "python ./blueprint/manage.py makemigrations && python ./blueprint/manage.py migrate && cd blueprint && celery -A blueprint worker -l info --detach --pidfile= && uwsgi --ini uwsgi.ini"
+#    command: bash -c "python ./blueprint/manage.py makemigrations && python ./blueprint/manage.py migrate && cd blueprint && uwsgi --ini uwsgi.ini"
+
+    volumes:
+      - /var/log/ftcloud/yw:/var/log/ftcloud/yw
+    ports:
+      - "11001:11001"
+    restart: unless-stopped
+    network_mode: "host"
+  
+  futong-cm-monitor-agent:
+    image: {futong-cm-monitor-agent}
+    ports:
+      - "13002:13002"
+    volumes:
+      - /var/log/ftcloud/yw/monitor-agent/:/futong_cmp_monitor-agent/logs/monitor-agent.log
+    network_mode: "host"
+    container_name: futong_cm_monitor-agent
+    command: bash -c "python monitor.py"
+    
+  futong-cm-monitor:
+    image: {futong-cm-monitor}
+    volumes:
+      - /etc/prometheus:/etc/prometheus
+      - /var/log/ftcloud/futong-cm-monitor:/futong_cmp_monitor/logs
+    ports:
+      - "13001:13001"
+    network_mode: "host"
+    container_name: futong_cm_monitor
+    command: bash -c "python /futong_cmp_monitor/manage.py makemigrations && python /futong_cmp_monitor/manage.py migrate && python /futong_cmp_monitor/manage.py runserver 0.0.0.0:13001"
+  
+  scripts-manage:
+    image: {scripts-manage}
+    restart: unless-stopped
+    command: bash -c "python /code/scripts_manage/manage.py makemigrations && python /code/scripts_manage/manage.py migrate && cd /code/scripts_manage && celery -A scripts_manage worker -l info --detach --pidfile= && python /code/scripts_manage/manage.py runserver 0:10086"
+    network_mode: "host"
+    volumes:
+      - /var/log/ftcloud/yw:/var/log/ftcloud/yw
+      - /home/scripts_file:/code/scripts_manage/data/script
+    ports:
+      - "10086:10086"
+    container_name: futong-cm-scripts-manage  
+  

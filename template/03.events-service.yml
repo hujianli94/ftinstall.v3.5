@@ -1,0 +1,35 @@
+version: '3'
+services:
+  events-agent:
+    restart: unless-stopped
+    image: {events_agent}
+    volumes:
+      - /var/log/ftcloud:/var/log/ftcloud:rw,Z
+      - /data/events-agent/data:/var/run/ftcloud/events-agent:rw,Z
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+        - "17086:17086"
+    environment:
+      - FTCLOUD_LOGS_DIRECTORY=/var/log/ftcloud
+      - FTCLOUD_LOGS_CONFIGURATION_FILE=/usr/share/events-agent/etc/logconf.json
+      - DB_SERVICE_ADDRESS=127.0.0.1
+      - EVENTS_SERVICE_URL=http://127.0.0.1:17082
+      - MQ_HOSTNAME=127.0.0.1
+      - MQ_USER=user
+      - MQ_PASSWORD=password
+      - MQ_VHOST=my_vhost
+    network_mode: "host"
+
+  events-service:
+    restart: unless-stopped
+    image: {events_service}
+    volumes:
+      - /var/log/ftcloud:/var/log/ftcloud:rw,Z
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "17082:17082"
+    environment:
+      - FTCLOUD_LOGS_DIRECTORY=/var/log/ftcloud
+      - FTCLOUD_LOGS_CONFIGURATION_FILE=/usr/share/events-service/etc/logconf.json
+      - DB_SERVICE_ADDRESS=127.0.0.1
+    network_mode: "host"

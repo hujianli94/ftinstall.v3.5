@@ -1,0 +1,52 @@
+version: "3"
+#futong-cm-zuul
+services:
+  futong-cm-admin-manage:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-admin-manage}
+        ports:
+            - "8080:8080"
+        volumes:
+            - /var/log/ftcloud/yy/futong-cm-admin-manage:/logs/futong-cm-admin-manage/
+        network_mode: "host"
+        container_name: futong-cm-admin-manage
+
+  futong-cm-admin-workflow:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-admin-workflow}
+        ports:
+            - "8686:8686"
+        volumes:
+            - /var/log/ftcloud/yy/futong-cm-admin-workflow:/logs/futong-cm-admin-workflow/
+        network_mode: "host"
+        container_name: futong-cm-admin-workflow
+
+  futong-cm-audit:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-audit}
+        ports:
+            - "5016:5016"
+        volumes:
+            - /var/log/ftcloud/yy/futong-cm-audit:/logs/futong-cm-audit/
+        network_mode: "host"
+        container_name: futong-cm-audit
+
+  futong-cm-mq-server:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-mq-server}
+        ports:
+            - "6010:6010"
+        volumes:
+            - /var/log/ftcloud/yy/futong-cm-mq-server:/logs/futong-cm-mq-server/
+        network_mode: "host"
+        container_name: futong-cm-mq-server
+
+  futong-cm-operation-main:
+        # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+        image: {futong-cm-operation-main}
+        ports:
+            - "8070:8070"
+        volumes:
+            - /var/log/ftcloud/yy/futong-cm-operation-main:/logs/futong-cm-operation-main/
+        network_mode: "host"
+        container_name: futong-cm-operation-main
