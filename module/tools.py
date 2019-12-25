@@ -8,11 +8,11 @@ import re
 from conf import get_yml_info
 from utility import Base_Tools as tools
 
+
 class CMP_Install_tools:
     # 类属性，获取ip
     ip = tools.get_ip()
-    Path = os.path.abspath(os.path.dirname(os.path.dirname(__file__))) + "/conf"
-    Mongo_script = os.path.abspath(os.path.dirname(os.path.dirname(__file__))) + "/module"
+    Mongo_script = "."
     yml_path = '/etc/ftcloud/compose'  # type: str
 
     def __init__(self):
@@ -158,47 +158,47 @@ class CMP_Install_tools:
     def create_config_dir(self):
         # 生成mongodb-keyfile
         tools.run_cmd("openssl rand -base64 756 > ./conf/mongo/mongodb-keyfile")
-        Create_dirs = {"Base-Server": {"Mysql": ["/data/mysql/data", "/var/log/mysql"],
-                                       "Rabbitmq": ["/data/rabbitmq/data", "/etc/rabbitmq", "/var/log/rabbitmq"],
-                                       "Redis": ["/data/redis/data", "/etc/redis/", "/var/log/redis"],
-                                       "Consul": ["/data/consul/data", "/data/consul/config", "/var/log/consulcd"],
-                                       "Mongo": ["/data/mongodb/mongo/db", "/etc/mongodb/mongo/config",
-                                                 "/etc/mongodb/mongo1/config", "/etc/mongodb/mongo2/config",
-                                                 "/etc/mongodb/mongo3/config",
-                                                 "/etc/mongodb/mongo1/keyfile", "/etc/mongodb/mongo2/keyfile",
-                                                 "/etc/mongodb/mongo3/keyfile"]},
-                       "CMDB-Server": {
-                           "CMDB": ["/home/ftcloud/cmdb/cmdb_event/logs", "/home/ftcloud/cmdb/cmdb_model/logs",
-                                    "/home/ftcloud/cmdb/cmdb_resource/logs",
-                                    "/home/ftcloud/cmdb/cmdb_scene/logs"]},
-                       "Monitor-Server": {"Jk_dir": ["/etc/prometheus/"]},
 
-                       "YW-Server": {"YW-server_dir": ["/var/log/ftcloud/yw", "/var/log/ftcloud/yw/monitor-agent",
-                                                       "/var/log/ftcloud/futong-cm-monitor", "/data/events-agent/data",
-                                                       "/etc/localtime"]},
-                       "YunY-Server": {"YunY-Server_dir": ["/var/log/ftcloud/yy/futong-cm-admin-manage",
-                                                           "/var/log/ftcloud/yy/futong-cm-admin-workflow",
-                                                           "/var/log/ftcloud/yy/futong-cm-mq-server",
-                                                           "/var/log/ftcloud/yy/futong-cm-operation-main"]},
-                       "ZZ-management": {"ZZ-management_dir": ["/var/log/ftcloud/futong-cm-zuul",
-                                                               "/var/log/ftcloud/futong-cm-sso",
-                                                               "/var/log/ftcloud/futong-cm-ucenter",
-                                                               "/var/log/ftcloud/zy/futong-cm-xxlJob",
-                                                               "/var/log/ftcloud/zy/futong-cm-resource-aggregation",
-                                                               "/var/log/ftcloud/zy/futong-cm-resource-compute",
-                                                               "/var/log/ftcloud/zy/futong-cm-resource-elastic",
-                                                               "/var/log/ftcloud/zy/futong-cm-resource-esi",
-                                                               "/var/log/ftcloud/zy/futong-cm-resource-network",
-                                                               "/var/log/ftcloud/zy/futong-cm-resource-rds",
-                                                               "/var/log/ftcloud/zy/futong-cm-resource-nat"
+        Create_dirs = {"Base-Server": {"Mysql": [conf.mysql_data, conf.mysql_log],
+                                       "Rabbitmq": [conf.rabbitmnq_data, conf.rabbitmnq_conf, conf.rabbitmnq_log],
+                                       "Redis": [conf.radis_data, conf.redis_conf, conf.redis_log],
+                                       "Consul": [conf.consul_data, conf.consul_conf, conf.consul_log],
+                                       "Mongo": [conf.mongo_data, conf.mongo_conf,
+                                                 conf.mongo1_conf, conf.mongo2_conf,
+                                                 conf.mongo3_conf,
+                                                 conf.mongo1_keyfile, conf.mongo2_keyfile,
+                                                 conf.mongo3_keyfile]},
+                       "CMDB-Server": {
+                           "CMDB": [conf.cmdb_event_log, conf.cmdb_model_log,
+                                    conf.cmdb_resource_log,
+                                    conf.cmdb_scene_log]},
+                       "Monitor-Server": {"Jk_dir": [conf.prometheus_conf]},
+
+                       "YW-Server": {"YW-server_dir": [conf.yw, conf.yw_monitor_agent,
+                                                       conf.futong_cm_monitor, conf.events_agent_data,
+                                                       conf.localtime_dir]},
+                       "YunY-Server": {"YunY-Server_dir": [conf.YunY_log + "futong-cm-admin-manage",
+                                                           conf.YunY_log + "futong-cm-admin-workflow",
+                                                           conf.YunY_log + "futong-cm-mq-server",
+                                                           conf.YunY_log + "futong-cm-operation-main"]},
+                       "ZZ-management": {"ZZ-management_dir": [conf.futong_cm_zuul_log,
+                                                               conf.futong_cm_sso_log,
+                                                               conf.futong_cm_ucenter_log,
+                                                               conf.Resource_management_log + "futong-cm-xxlJob",
+                                                               conf.Resource_management_log + "futong-cm-resource-aggregation",
+                                                               conf.Resource_management_log + "futong-cm-resource-compute",
+                                                               conf.Resource_management_log + "futong-cm-resource-elastic",
+                                                               conf.Resource_management_log + "futong-cm-resource-esi",
+                                                               conf.Resource_management_log + "futong-cm-resource-network",
+                                                               conf.Resource_management_log + "futong-cm-resource-rds",
+                                                               conf.Resource_management_log + "futong-cm-resource-nat"
                                                                ]},
-                       "Nginx": {"Nginx_dir": ["/etc/nginx", "/var/log/nginx", "/usr/share/nginx/html"]},
+                       "Nginx": {"Nginx_dir": [conf.nginx_conf, conf.nginx_log, conf.nginx_html]},
 
                        }
 
         # 创建目录
         for Create_dir, dirs in Create_dirs.items():
-            # print(Create_dir, dirs)
             print("")
             print("-" * 60)
             print("Start creating {} corresponding directories".format(Create_dir))
@@ -208,40 +208,32 @@ class CMP_Install_tools:
                     print("Service name {} create directory {}".format(dir_name, i))
 
     def copy_config_file(self):
-        for app_name in os.listdir(self.Path):
-            if app_name == "consul":
-                datas = os.listdir(self.Path + "/" + app_name)
-                for file_name in datas:
-                    # print(Path_dir + file_name)
-                    shutil.copy2(self.Path + "/" + app_name + "/" + file_name, "/data/consul/config")
-            elif app_name == "redis":
-                datas = os.listdir(self.Path + "/" + app_name)
-                for file_name in datas:
-                    shutil.copy2(self.Path + "/" + app_name + "/" + file_name, "/etc/redis")
-            elif app_name == "rabbitmq":
-                datas = os.listdir(self.Path + "/" + app_name)
-                for file_name in datas:
-                    shutil.copy2(self.Path + "/" + app_name + "/" + file_name, "/etc/rabbitmq")
-            elif app_name == "mongo":
-                datas = os.listdir(self.Path + "/" + app_name)
-                for file_name in datas:
-                    if file_name == "mongo1.conf":
-                        shutil.copy2(self.Path + "/" + app_name + "/" + file_name, "/etc/mongodb/mongo1/config")
-                    elif file_name == "mongo2.conf":
-                        shutil.copy2(self.Path + "/" + app_name + "/" + file_name, "/etc/mongodb/mongo2/config")
-                    elif file_name == "mongo3.conf":
-                        shutil.copy2(self.Path + "/" + app_name + "/" + file_name, "/etc/mongodb/mongo3/config")
-                    elif file_name == "mongodb-keyfile":
-                        shutil.copy2(self.Path + "/" + app_name + "/" + file_name, "/etc/mongodb/mongo1/keyfile")
-                        shutil.copy2(self.Path + "/" + app_name + "/" + file_name, "/etc/mongodb/mongo2/keyfile")
-                        shutil.copy2(self.Path + "/" + app_name + "/" + file_name, "/etc/mongodb/mongo3/keyfile")
-                        os.chown("/etc/mongodb/mongo1/keyfile", 999, 999)
-                        os.chown("/etc/mongodb/mongo2/keyfile", 999, 999)
-                        os.chown("/etc/mongodb/mongo3/keyfile", 999, 999)
-            elif app_name == "prometheus":
-                datas = os.listdir(self.Path + "/" + app_name)
-                for file_name in datas:
-                    shutil.copy2(self.Path + "/" + app_name + "/" + file_name, "/etc/prometheus")
+        for root, dirs, files in os.walk("../conf"):
+            for file in files:
+                dirname = os.path.join(root, file).replace("\\", "/").split("/")[2]
+                filename = os.path.join(root, file).replace("\\", "/")
+                if dirname == "consul":
+                    shutil.copy2(filename, conf.consul_conf)
+                elif dirname == "redis":
+                    shutil.copy2(filename, conf.redis_conf)
+                elif dirname == "rabbitmq":
+                    shutil.copy2(filename, conf.rabbitmnq_conf)
+                elif dirname == "mongo":
+                    if filename.split('/')[-1] == "mongo1.conf":
+                        shutil.copy2(filename, conf.mongo1_conf)
+                    elif filename.split('/')[-1] == "mongo2.conf":
+                        shutil.copy2(filename, conf.mongo2_conf)
+                    elif filename.split('/')[-1] == "mongo3.conf":
+                        shutil.copy2(filename, conf.mongo3_conf)
+                    elif filename.split('/')[-1] == "mongodb-keyfile":
+                        mongo_key_name = filename.split('/')[-1]
+                        config_list = ["/etc/mongodb/mongo{0}/keyfile".format(i) for i in range(1, 4)]
+                        for mongo_key in config_list:
+                            shutil.copy2(filename, mongo_key)
+                            tools.run_cmd("chown 999 {}".format(mongo_key + "/" + str(mongo_key_name)))
+                            tools.run_cmd("chomod 600 {}".format(mongo_key + "/" + str(mongo_key_name)))
+                elif dirname == "prometheus":
+                    shutil.copy2(filename, conf.prometheus_conf)
 
     def __Modify_mysql_config(self, filename, one_line_info, old_str, new_str):
         '''
@@ -391,11 +383,20 @@ class CMP_Install_tools:
         if result_mongo_code == 0:
             mysql_docker_id = tools.exec_cmd("docker ps | grep mariadb|awk '{print $1}'")
             mysql_docker_id = mysql_docker_id[1] if mysql_docker_id[0] == 0 else None
-            sql_name = "mycat_futong_db"
+            # 创建mycat_futong_db数据库
+            db_name = "mycat_futong_db"
             cmd_result = tools.run_cmd(
                 'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
-                    mysql_docker_id, sql_name))
+                    mysql_docker_id, db_name))
             tools.YcCheck(cmd_result, "创建数据库失败,,,,,,,,")
+
+            # 创建额外4个数据库
+            db_names = ["blueprint", "monitoralter", "resource_arrangement", "scripts_data"]
+            for db_name in db_names:
+                create_db_result = tools.run_cmd(
+                    'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
+                        mysql_docker_id, db_name))
+                tools.YcCheck(create_db_result, "创建数据库失败,,,,,,,,")
             sql_Structure_name = ""
             sql_info = ""
             for root, _, files in os.walk("./db"):
@@ -411,13 +412,13 @@ class CMP_Install_tools:
             tools.YcCheck(cmd, "数据传输入异常，请检查....")
             cmd = tools.run_cmd(
                 'docker exec -it %s mysql -uroot -phello %s -e"source /home/%s;"' % (
-                    mysql_docker_id, sql_name, sql_Structure_name.split('/')[4]))
+                    mysql_docker_id, db_name, sql_Structure_name.split('/')[4]))
             tools.YcCheck(cmd, "导入表结构异常,请检查.......")
 
             # 再导入表初始化数据
             cmd = tools.run_cmd(
                 'docker exec -it %s mysql -uroot -phello %s -e"source /home/%s;"' % (
-                    mysql_docker_id, sql_name, sql_info.split('/')[4]))
+                    mysql_docker_id, db_name, sql_info.split('/')[4]))
             tools.YcCheck(cmd, "导入表结构异常,请检查.......")
             print(
                 "\033[32m ---------------------------------------------- 导入数据库完毕 ------------------------------------------\033[0m")
@@ -474,9 +475,9 @@ class CMP_Install_tools:
         if result == 0:
             logging.info("******开启firewall防火墙的端口***********")
             [tools.run_cmd('firewall-cmd --zone=public --add-port=%s/tcp --permanent' % str(i)) for i in
-             conf.TCP_PORTS.split()]
+             set(conf.TCP_PORTS.split())]
             [tools.run_cmd('firewall-cmd --zone=public --add-port=%s/udp --permanent' % str(i)) for i in
-             conf.UDP_PORTS.split()]
+             set(conf.UDP_PORTS.split())]
             tools.run_cmd('firewall-cmd --reload')
 
     def open_port(self):

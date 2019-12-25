@@ -1,10 +1,75 @@
 # -*- coding: utf-8 -*-
 import hashlib
 
+# dockhub镜像仓库地址
 REGISTRY_URL = '119.254.93.246:15005'
 
-TCP_PORTS = "22 3306 4396 5671 5672 15671 15672 27017 27018 27019 25672 6379 8300-8302 8400 8500 17082 17086 16006 8080"
+# 对外服务端口号
+Y_J_envt_base = "3306 4396 5010 5016 5671 5672 6010 9091 15671 15672 25672 6379 8300-8302 8400 8500 8080 8686 8070 17082 17086 16006 27016 27017 27018 27019 18080 11000 13001 11001 10086"
+Zy_Management = "5010 5011 6000 5012 8066 30000 30010 30011 30012 30013 30014 30015 30017 30018 30019 30020 30021 30022"
+CMDB_Management = "10006 10007 10008 10009"
+Operation_Management = "8080 8686 5016 6010 5013"
+File_Server = "22122 8888"
+ALL_Port = Y_J_envt_base + Zy_Management + CMDB_Management + Operation_Management + File_Server
 UDP_PORTS = "8301 8302 53"
+
+# mysql服务
+mysql_data = "/data/mysql/data"
+mysql_log = "/var/log/mysql"
+
+# Rabbitmq服务
+rabbitmnq_conf = "/etc/rabbitmq"
+rabbitmnq_data = "/data/rabbitmq/data"
+rabbitmnq_log = "/var/log/rabbitmq"
+
+# radis服务
+radis_data = "/data/redis/data"
+redis_conf = "/etc/redis"
+redis_log = "/var/log/redis"
+
+# consul服务
+consul_data = "/data/consul/data"
+consul_conf = "/data/consul/config"
+consul_log = "/var/log/consulcd"
+
+# mongo服务
+mongo_data = "/data/mongodb/mongo/db"
+mongo_conf = "/etc/mongodb/mongo/config"
+mongo1_conf = "/etc/mongodb/mongo1/config"
+mongo2_conf = "/etc/mongodb/mongo2/config"
+mongo3_conf = "/etc/mongodb/mongo3/config"
+mongo1_keyfile = "/etc/mongodb/mongo1/keyfile"
+mongo2_keyfile = "/etc/mongodb/mongo2/keyfile"
+mongo3_keyfile = "/etc/mongodb/mongo3/keyfile"
+
+# CMDB服务
+cmdb_event_log = "/home/ftcloud/cmdb/cmdb_event/logs"
+cmdb_model_log = "/home/ftcloud/cmdb/cmdb_model/logs"
+cmdb_resource_log = "/home/ftcloud/cmdb/cmdb_resource/logs"
+cmdb_scene_log = "/home/ftcloud/cmdb/cmdb_scene/logs"
+prometheus_conf = "/etc/prometheus"
+
+# 运维服务
+yw = "/var/log/ftcloud/yw"
+yw_monitor_agent = "/var/log/ftcloud/yw/monitor-agent"
+futong_cm_monitor = "/var/log/ftcloud/futong-cm-monitor"
+events_agent_data = "/data/events-agent/data"
+localtime_dir = "/etc/localtime"
+
+# 运营日志目录
+YunY_log = "/var/log/ftcloud/yy/"
+
+## 资源管理日志目录
+futong_cm_zuul_log = "/var/log/ftcloud/futong-cm-zuul"
+futong_cm_sso_log = "/var/log/ftcloud/futong-cm-sso"
+futong_cm_ucenter_log = "/var/log/ftcloud/futong-cm-ucenter"
+Resource_management_log = "/var/log/ftcloud/zy/"
+
+## nginx服务
+nginx_conf = "/etc/nginx"
+nginx_log = "/var/log/nginx"
+nginx_html = "/usr/share/nginx/html"
+
 
 Host_info = '''\
 127.0.0.1 mongodb.service.ftcloud
@@ -52,7 +117,9 @@ Host_info = '''\
 127.0.0.1 alertmanager.service.ftcloud
 127.0.0.1 pushgateway.service.ftcloud
 127.0.0.1 cm.consul.url
+127.0.0.1 resource-cloudmanager.service.ftcloud
 '''
+
 
 def get_yml_info(ip):
     manage_ip = ip
@@ -123,7 +190,7 @@ def get_yml_info(ip):
             'futong-cm-monitor-agent': '{0}/yw/{1}'.format(REGISTRY_URL, 'futong-cm-monitor-agent:latest'),
             'futong-cm-monitor': '{0}/yw/{1}'.format(REGISTRY_URL, 'futong-cm-monitor:latest'),
             'futong-cm-scripts-manage': '{0}/yw/{1}'.format(REGISTRY_URL, 'futong-cm-scripts-manage:latest'),
-            'scripts-manage': '{0}/yw/{1}'.format(REGISTRY_URL,"futong-cm-scripts-manage:latest")
+            'scripts-manage': '{0}/yw/{1}'.format(REGISTRY_URL, "futong-cm-scripts-manage:latest")
         },
         '07.jk-server.yml': {
             'futong-cm-auto-prometheus': 'prom/{0}'.format('prometheus:latest'),
