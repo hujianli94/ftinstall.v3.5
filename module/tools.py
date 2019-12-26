@@ -341,7 +341,7 @@ class CMP_Install_tools:
             tools.run_cmd("chmod 755 %s/%s" % (self.script, "mongo_init.sh"))
             tools.run_cmd("docker cp %s/%s %s:/" % (self.script, "mongo_init.sh", mongo_master))
             result = tools.run_cmd("docker exec -i %s /bin/bash /mongo_init.sh" % mongo_master)
-            tools.YcCheck(result, "***配置 mongo.sh 集群失败****")
+            # tools.YcCheck(result, "***配置 mongo.sh 集群失败****")
             # 去掉mongo集群中的注释
             for root, _, files in os.walk("/etc/mongodb"):
                 for file in files:
@@ -493,10 +493,24 @@ class CMP_Install_tools:
         except:
             pass
 
-    def update_html(self, filename, desfilename):
-        if not os.path.exists(desfilename):
-            os.mkdir(desfilename)
-        tools.run_cmd("cp -rf {} {}".format(filename, desfilename))
+    def _copyFiles(self, sourceDir, targetDir, ignoreStart):
+        for f in os.listdir(sourceDir):
+            sourceF = os.path.normpath(os.path.join(sourceDir, f))
+            targetF = os.path.normpath(os.path.join(targetDir, f))
+            if os.path.isfile(sourceF):
+                if len(ignoreStart) > 0 and os.path.basename(sourceF).startswith(ignoreStart):
+                    continue
+                if not os.path.exists(targetDir):
+                    os.makedirs(targetDir)
+                print("copy file from", sourceF, "to", targetF)
+                shutil.copy2(sourceF, targetF)
+            if os.path.isdir(sourceF):
+                self._copyFiles(sourceF, targetF, ignoreStart)
+
+    def Update_html(self):
+        html_dir = "/usr/share/nginx/html/"
+        logging.info("\033[32m 开始复制前端代码到 {}\033[0m".format(html_dir))
+        self._copyFiles(self.html_path + "dist/", "/usr/share/nginx/html/", "")
 
     def main(self):
         ######## 初始化############################
@@ -513,6 +527,6 @@ class CMP_Install_tools:
         self.start_all_server()
         self.open_port()
         self.start_file_server()
-        self.update_html(self.html_path + "dist/", "/usr/share/nginx/html/")
+        self.Update_html()
         # self.stop_all_server()  # 停止所有服务
         # self.restart_all_server()     # 重启所有服务
