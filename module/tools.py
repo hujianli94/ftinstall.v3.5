@@ -12,7 +12,8 @@ from utility import Base_Tools as tools
 class CMP_Install_tools:
     # 类属性，获取ip
     ip = tools.get_ip()
-    Mongo_script = os.path.abspath(os.path.dirname(__file__))
+    script = os.path.abspath(os.path.dirname(__file__))
+    html_path = os.path.dirname(script) + "/html/"
     yml_path = '/etc/ftcloud/compose'  # type: str
 
     def __init__(self):
@@ -337,8 +338,8 @@ class CMP_Install_tools:
         init_rabbit_code = self.rabbit_vhost()
         if init_rabbit_code == 0:
             mongo_master = "mongo1"
-            tools.run_cmd("chmod 755 %s/%s" % (self.Mongo_script, "mongo_init.sh"))
-            tools.run_cmd("docker cp %s/%s %s:/" % (self.Mongo_script, "mongo_init.sh", mongo_master))
+            tools.run_cmd("chmod 755 %s/%s" % (self.script, "mongo_init.sh"))
+            tools.run_cmd("docker cp %s/%s %s:/" % (self.script, "mongo_init.sh", mongo_master))
             result = tools.run_cmd("docker exec -i %s /bin/bash /mongo_init.sh" % mongo_master)
             tools.YcCheck(result, "***配置 mongo.sh 集群失败****")
             # 去掉mongo集群中的注释
@@ -492,11 +493,16 @@ class CMP_Install_tools:
         except:
             pass
 
+    def update_html(self, filename, desfilename):
+        if not os.path.exists(desfilename):
+            os.mkdir(desfilename)
+        tools.run_cmd("cp -rf {} {}".format(filename, desfilename))
+
     def main(self):
         ######## 初始化############################
-        # self.init_system()
-        # self.install_base()
-        # self.pull_image(self.ip)
+        self.init_system()
+        self.install_base()
+        self.pull_image(self.ip)
         self.create_config_dir()
         self.copy_config_file()
         ############服务初始化操作######################################
@@ -507,5 +513,6 @@ class CMP_Install_tools:
         self.start_all_server()
         self.open_port()
         self.start_file_server()
+        self.update_html(self.html_path + "dist/", "/usr/share/nginx/html/")
         # self.stop_all_server()  # 停止所有服务
         # self.restart_all_server()     # 重启所有服务

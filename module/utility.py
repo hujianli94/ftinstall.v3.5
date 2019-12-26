@@ -7,7 +7,6 @@ import subprocess
 
 # from functools import partial
 
-
 class Base_Tools:
     """
     基础工具方法 类
@@ -138,3 +137,4 @@ class Base_Tools:
         return subprocess.check_output('''\
         ip ad|grep -o -e 'inet [0-9]\{1,3\}.[0-9]\{1,3\}.[0-9]\{1,3\}.[0-9]\{1,3\}'|grep -v "127.0.0"|awk '{print $2}'\
         ''', shell=True).split('\n')[0]
+
