@@ -12,7 +12,7 @@ from utility import Base_Tools as tools
 class CMP_Install_tools:
     # 类属性，获取ip
     ip = tools.get_ip()
-    Mongo_script = "."
+    Mongo_script = os.path.abspath(os.path.dirname(__file__)) + "/conf"
     yml_path = '/etc/ftcloud/compose'  # type: str
 
     def __init__(self):
@@ -384,7 +384,7 @@ class CMP_Install_tools:
             mysql_docker_id = tools.exec_cmd("docker ps | grep mariadb|awk '{print $1}'")
             mysql_docker_id = mysql_docker_id[1] if mysql_docker_id[0] == 0 else None
             # 创建mycat_futong_db数据库
-            db_name = "mycat_futong_db"
+            db_name = "mycat_futong_db"  # type: str
             cmd_result = tools.run_cmd(
                 'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
                     mysql_docker_id, db_name))
@@ -494,9 +494,9 @@ class CMP_Install_tools:
 
     def main(self):
         ######## 初始化############################
-        self.init_system()
-        self.install_base()
-        self.pull_image(self.ip)
+        # self.init_system()
+        # self.install_base()
+        # self.pull_image(self.ip)
         self.create_config_dir()
         self.copy_config_file()
         ############服务初始化操作######################################
