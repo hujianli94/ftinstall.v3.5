@@ -12,7 +12,7 @@ from utility import Base_Tools as tools
 class CMP_Install_tools:
     # 类属性，获取ip
     ip = tools.get_ip()
-    Mongo_script = os.path.abspath(os.path.dirname(__file__)) + "/conf"
+    Mongo_script = os.path.abspath(os.path.dirname(__file__))
     yml_path = '/etc/ftcloud/compose'  # type: str
 
     def __init__(self):
