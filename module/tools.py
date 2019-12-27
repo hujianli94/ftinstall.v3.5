@@ -4,6 +4,7 @@ import time
 import logging
 import shutil
 import conf
+import subprocess
 import re
 from conf import get_yml_info
 from utility import Base_Tools as tools
@@ -12,8 +13,8 @@ from utility import Base_Tools as tools
 class CMP_Install_tools:
     # 类属性，获取ip
     ip = tools.get_ip()
-    script = os.path.abspath(os.path.dirname(__file__))
-    html_path = os.path.dirname(script) + "/html/"
+    script = "./module/"
+    html_path = "./html/"
     yml_path = '/etc/ftcloud/compose'  # type: str
 
     def __init__(self):
@@ -28,44 +29,11 @@ class CMP_Install_tools:
             f.write(Hosts_DNS_info)
 
     def _ulimits(self):
-        limits = '''\
-    * soft noproc 20480
-    * hard noproc 20480
-    root soft nofile 65535
-    root hard nofile 65535
-    * soft nofile 65535
-    * hard nofile 65535
-    '''
-        tools.write_file('/etc/security/limits.conf', limits)
+        tools.write_file('/etc/security/limits.conf', conf.limits)
         tools.run_cmd('ulimit -n 65535 && ulimit -u 65535')
 
     def _kernel(self):
-        kernel = '''\
-    fs.file-max = 20000000
-    vm.overcommit_memory = 1
-    net.ipv4.tcp_max_tw_buckets = 1000000
-    net.ipv4.tcp_fin_timeout = 30
-    net.ipv4.tcp_keepalive_time = 300
-    net.ipv4.tcp_keepalive_probes = 3
-    net.ipv4.tcp_keepalive_intvl = 30
-    net.ipv4.tcp_syncookies = 1
-    net.ipv4.tcp_tw_reuse = 1
-    net.ipv4.tcp_tw_recycle = 1
-    net.ipv4.ip_local_port_range = 5000 65000
-    net.ipv4.tcp_mem = 786432 1048576 1572864
-    net.core.wmem_max = 873200
-    net.core.rmem_max = 873200
-    net.ipv4.tcp_wmem = 8192 436600 873200
-    net.ipv4.tcp_rmem = 32768 436600 873200
-    net.core.somaxconn = 10240
-    net.core.netdev_max_backlog = 20480
-    net.ipv4.tcp_max_syn_backlog = 20480
-    net.ipv4.tcp_retries2 = 5
-    net.ipv4.conf.lo.arp_ignore = 0
-    net.ipv4.conf.lo.arp_announce = 0
-    net.ipv4.conf.all.arp_ignore = 0    
-    '''
-        tools.write_file('/etc/sysctl.conf', kernel)
+        tools.write_file('/etc/sysctl.conf', conf.kernel)
         tools.run_cmd('sysctl -p >/dev/null 2>&1')
 
     def _security(self):
@@ -74,15 +42,8 @@ class CMP_Install_tools:
         tools.run_cmd('setenforce 0 >/dev/null 2>&1')
 
     def _hugepage(self):
-        hugepage = '''\
-    if test -f /sys/kernel/mm/transparent_hugepage/enabled; then
-        echo never > /sys/kernel/mm/transparent_hugepage/enabled
-    fi
-    if test -f /sys/kernel/mm/transparent_hugepage/defrag; then
-        echo never > /sys/kernel/mm/transparent_hugepage/defrag
-    fi    
-    '''
-        tools.write_file('/etc/rc.local', hugepage, mode='a')
+
+        tools.write_file('/etc/rc.local', conf.hugepage, mode='a')
         tools.run_cmd('echo never > /sys/kernel/mm/transparent_hugepage/enabled')
         tools.run_cmd('echo never > /sys/kernel/mm/transparent_hugepage/defrag')
 
@@ -133,6 +94,11 @@ class CMP_Install_tools:
         self._install_docker_compose()
 
     def pull_image(self, ip):
+        '''
+        多线程pull镜像
+        :param ip:
+        :return:
+        '''
         all_images = []
         yml_info = get_yml_info(ip)
         for v in yml_info.values():
@@ -144,6 +110,12 @@ class CMP_Install_tools:
         tools.mulit_run(tools.run3_cmd, len(all_images), ['docker pull %s' % i for i in set(all_images)])
 
     def _generate_yml(self, ip, path):
+        '''
+        拷贝yml文件到path目录中，并进行字典渲染
+        :param ip:
+        :param path:
+        :return:
+        '''
         yml_info = get_yml_info(ip)
         yml = {}
         for tmpl in [i for i in os.listdir('template')]:
@@ -157,6 +129,10 @@ class CMP_Install_tools:
             tools.write_file(path + '/%s' % yml_path, content)
 
     def create_config_dir(self):
+        """
+        创建所有的文件目录
+        :return:
+        """
         # 生成mongodb-keyfile
         tools.run_cmd("openssl rand -base64 756 > ./conf/mongo/mongodb-keyfile")
 
@@ -209,32 +185,43 @@ class CMP_Install_tools:
                     print("Service name {} create directory {}".format(dir_name, i))
 
     def copy_config_file(self):
-        for root, dirs, files in os.walk("../conf"):
+        """
+        复制conf下相应的配置文件到指定目录
+        :return:
+        """
+        for root, dirs, files in os.walk("./conf/"):
             for file in files:
                 dirname = os.path.join(root, file).replace("\\", "/").split("/")[2]
                 filename = os.path.join(root, file).replace("\\", "/")
                 if dirname == "consul":
-                    shutil.copy2(filename, conf.consul_conf)
+                    tools.write_file(conf.consul_conf + "/" + filename.split('/')[-1], open(filename).read())
                 elif dirname == "redis":
-                    shutil.copy2(filename, conf.redis_conf)
+                    tools.write_file(conf.redis_conf + "/" + filename.split('/')[-1], open(filename).read())
                 elif dirname == "rabbitmq":
-                    shutil.copy2(filename, conf.rabbitmnq_conf)
+                    tools.write_file(conf.rabbitmnq_conf + "/" + filename.split('/')[-1], open(filename).read())
                 elif dirname == "mongo":
                     if filename.split('/')[-1] == "mongo1.conf":
-                        shutil.copy2(filename, conf.mongo1_conf)
+                        tools.write_file(conf.mongo1_conf + "/" + filename.split('/')[-1], open(filename).read())
                     elif filename.split('/')[-1] == "mongo2.conf":
-                        shutil.copy2(filename, conf.mongo2_conf)
+                        tools.write_file(conf.mongo2_conf + "/" + filename.split('/')[-1], open(filename).read())
                     elif filename.split('/')[-1] == "mongo3.conf":
-                        shutil.copy2(filename, conf.mongo3_conf)
+                        tools.write_file(conf.mongo3_conf + "/" + filename.split('/')[-1], open(filename).read())
                     elif filename.split('/')[-1] == "mongodb-keyfile":
                         mongo_key_name = filename.split('/')[-1]
+                        # print(mongo_key_name)
                         config_list = ["/etc/mongodb/mongo{0}/keyfile".format(i) for i in range(1, 4)]
                         for mongo_key in config_list:
-                            shutil.copy2(filename, mongo_key)
+                            tools.write_file(mongo_key + "/" + filename.split('/')[-1], open(filename))
                             tools.run_cmd("chown 999 {}".format(mongo_key + "/" + str(mongo_key_name)))
-                            tools.run_cmd("chomod 600 {}".format(mongo_key + "/" + str(mongo_key_name)))
+                            tools.run_cmd("chmod 600 {}".format(mongo_key + "/" + str(mongo_key_name)))
                 elif dirname == "prometheus":
-                    shutil.copy2(filename, conf.prometheus_conf)
+                    tools.write_file(conf.prometheus_conf + "/" + filename.split('/')[-1], open(filename).read())
+                    # shutil.copy2(filename, conf.prometheus_conf + "/" + filename.split('/')[-1])
+                elif dirname == "nginx":
+                    filename_split = filename.split("/")
+                    nginx_conf_name = conf.nginx_conf + "/" + "/".join(filename_split[4:])
+                    # print(nginx_conf_name, filename)
+                    tools.write_file(nginx_conf_name, open(filename).read())
 
     def __Modify_mysql_config(self, filename, one_line_info, old_str, new_str):
         '''
@@ -301,6 +288,10 @@ class CMP_Install_tools:
             return result
 
     def rabbit_vhost(self):
+        '''
+        rabbitmq服务进行用户创建赋权
+        :return:
+        '''
         # 重复20次等待rabbitmq的启动间隔，超时就退出
         MAX_Second = 20
         n = 0
@@ -312,12 +303,13 @@ class CMP_Install_tools:
             rabbmq_ids = tools.exec_cmd("docker ps | grep rabbitmq:3.7.17-management|awk '{print $1}'")
             rabbmq_id = rabbmq_ids[1] if rabbmq_ids[0] == 0 else None
             while (n <= MAX_Second):
-                rst = tools.run_cmd("docker exec -it {} rabbitmqctl status > ./rabbitmq_status.txt".format(rabbmq_id))
+                rst = subprocess.call("docker exec -it {} rabbitmqctl status > ./rabbitmq_status.txt".format(rabbmq_id),
+                                      shell=True)
                 with open("./rabbitmq_status.txt") as f:
                     s = f.readlines()
                     pid_info = s[1].strip("[").strip("{").split(",")[0]
                     if pid_info == "pid":
-                        print("\033[32m *********rabbitmq 容器服务启动成功.***************\033[0m")
+                        print("\033[32m ------------------ rabbitmq 容器服务启动成功. ------------------------------\033[0m")
                         tools.run3_cmd("docker exec -it %s rabbitmqctl add_vhost /" % rabbmq_id)
                         tools.run3_cmd("docker exec -it %s rabbitmqctl add_vhost /resource" % rabbmq_id)
                         tools.run3_cmd("docker exec -it %s rabbitmqctl add_vhost resource" % rabbmq_id)
@@ -330,7 +322,7 @@ class CMP_Install_tools:
                         return result
                         break
                     else:
-                        print("\033[33m ******** rabbitmq docker 服务器启动中 **************** \033[0m")
+                        print("\033[33m ------------------ rabbitmq docker 服务器启动中 ------------------------ \033[0m")
                         n += 1
 
     def mongo_init(self):
@@ -341,7 +333,7 @@ class CMP_Install_tools:
             tools.run_cmd("chmod 755 %s/%s" % (self.script, "mongo_init.sh"))
             tools.run_cmd("docker cp %s/%s %s:/" % (self.script, "mongo_init.sh", mongo_master))
             result = tools.run_cmd("docker exec -i %s /bin/bash /mongo_init.sh" % mongo_master)
-            # tools.YcCheck(result, "***配置 mongo.sh 集群失败****")
+            tools.YcCheck(result, "***配置 mongo.sh 集群失败****")
             # 去掉mongo集群中的注释
             for root, _, files in os.walk("/etc/mongodb"):
                 for file in files:
@@ -384,20 +376,24 @@ class CMP_Install_tools:
         if result_mongo_code == 0:
             mysql_docker_id = tools.exec_cmd("docker ps | grep mariadb|awk '{print $1}'")
             mysql_docker_id = mysql_docker_id[1] if mysql_docker_id[0] == 0 else None
-            # 创建mycat_futong_db数据库
-            db_name = "mycat_futong_db"  # type: str
-            cmd_result = tools.run_cmd(
-                'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
-                    mysql_docker_id, db_name))
-            tools.YcCheck(cmd_result, "创建数据库失败,,,,,,,,")
-
-            # 创建额外4个数据库
-            db_names = ["blueprint", "monitoralter", "resource_arrangement", "scripts_data"]
-            for db_name in db_names:
-                create_db_result = tools.run_cmd(
+            # 创建mycat_futong_db数据库,若有数据库直接在这里抛出异常
+            try:
+                db_name = "mycat_futong_db"  # type: str
+                cmd_result = tools.run_cmd(
                     'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
                         mysql_docker_id, db_name))
-                tools.YcCheck(create_db_result, "创建数据库失败,,,,,,,,")
+                tools.YcCheck(cmd_result, "创建数据库失败,,,,,,,,")
+
+                # 创建额外5个数据库
+                db_names = ["blueprint", "monitoralter", "resource_arrangement", "scripts_data",
+                            "apscheduler_cron_data"]
+                for db_name in db_names:
+                    create_db_result = tools.run_cmd(
+                        'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
+                            mysql_docker_id, db_name))
+                    tools.YcCheck(create_db_result, "创建数据库失败,,,,,,,,")
+            except Exception as e:
+                print(e)
             sql_Structure_name = ""
             sql_info = ""
             for root, _, files in os.walk("./db"):
@@ -449,7 +445,7 @@ class CMP_Install_tools:
                 logging.info('Start service: %s' % service[:-4])
                 # print(service)
                 tools.run_cmd('docker-compose -f %s/%s up -d' % (self.yml_path, service), retry=2)
-                time.sleep(1.5)
+                time.sleep(3)
 
         elif status == False and reverse == True:
             for server in new_dicts:
@@ -457,7 +453,7 @@ class CMP_Install_tools:
                 # 关闭服务，尝试关闭2次
                 logging.info('Stop service: %s' % service[:-4])
                 tools.run_cmd("source /etc/profile && docker-compose -f %s/%s down" % (self.yml_path, service), retry=2)
-                time.sleep(1.5)
+                time.sleep(3)
 
     def start_all_server(self):
         """ 启动服务，正序执行yaml文件，reverse=False，正序"""
@@ -476,7 +472,7 @@ class CMP_Install_tools:
         if result == 0:
             logging.info("******开启firewall防火墙的端口***********")
             [tools.run_cmd('firewall-cmd --zone=public --add-port=%s/tcp --permanent' % str(i)) for i in
-             set(conf.TCP_PORTS.split())]
+             set(conf.ALL_TCP_Port.split())]
             [tools.run_cmd('firewall-cmd --zone=public --add-port=%s/udp --permanent' % str(i)) for i in
              set(conf.UDP_PORTS.split())]
             tools.run_cmd('firewall-cmd --reload')
@@ -490,10 +486,17 @@ class CMP_Install_tools:
                 "docker run -d --network=host --name storage -e TRACKER_SERVER=IP:22122 -v /var/fdfs/storage:/var/fdfs --privileged=true -e GROUP_NAME=group1 delron/fastdfs storage")
             if result:
                 logging.info("start storage server successful.....")
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
     def _copyFiles(self, sourceDir, targetDir, ignoreStart):
+        """
+        目录到目录的复制
+        :param sourceDir: 源目录
+        :param targetDir: 目标目录
+        :param ignoreStart:
+        :return:
+        """
         for f in os.listdir(sourceDir):
             sourceF = os.path.normpath(os.path.join(sourceDir, f))
             targetF = os.path.normpath(os.path.join(targetDir, f))
@@ -508,18 +511,22 @@ class CMP_Install_tools:
                 self._copyFiles(sourceF, targetF, ignoreStart)
 
     def Update_html(self):
+        """
+        拷贝前端代码到nginx发布目录
+        :return:
+        """
         html_dir = "/usr/share/nginx/html/"
         logging.info("\033[32m 开始复制前端代码到 {}\033[0m".format(html_dir))
         self._copyFiles(self.html_path + "dist/", "/usr/share/nginx/html/", "")
 
     def main(self):
-        ######## 初始化############################
+        # ####### 初始化############################
         self.init_system()
         self.install_base()
         self.pull_image(self.ip)
         self.create_config_dir()
         self.copy_config_file()
-        ############服务初始化操作######################################
+        # ############服务初始化操作######################################
         self.check_yml_and_config_Mysql(self.ip)
         self.operate_base_service()
         self.import_db_sql()
@@ -528,5 +535,6 @@ class CMP_Install_tools:
         self.open_port()
         self.start_file_server()
         self.Update_html()
-        # self.stop_all_server()  # 停止所有服务
-        # self.restart_all_server()     # 重启所有服务
+        self.stop_all_server()  # 停止所有服务
+        self.restart_all_server()     # 重启所有服务
+

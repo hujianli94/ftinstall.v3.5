@@ -45,12 +45,12 @@ services:
       - "13001:13001"
     network_mode: "host"
     container_name: futong_cm_monitor
-    command: bash -c "python /futong_cmp_monitor/manage.py makemigrations && python /futong_cmp_monitor/manage.py migrate && python /futong_cmp_monitor/manage.py runserver 0.0.0.0:13001"
+    command: bash -c "python /futong_cmp_monitor/manage.py makemigrations app3 && python /futong_cmp_monitor/manage.py migrate && python /futong_cmp_monitor/manage.py runserver 0.0.0.0:13001"
   
   scripts-manage:
     image: {scripts-manage}
     restart: unless-stopped
-    command: bash -c "python /code/scripts_manage/manage.py makemigrations && python /code/scripts_manage/manage.py migrate && cd /code/scripts_manage && celery -A scripts_manage worker -l info --detach --pidfile= && python /code/scripts_manage/manage.py runserver 0:10086"
+    command: bash -c "python /code/scripts_manage/manage.py makemigrations app1 && python /code/scripts_manage/manage.py migrate && cd /code/scripts_manage && celery -A scripts_manage worker -l info --detach --pidfile= && python /code/scripts_manage/manage.py runserver 0:10086"
     network_mode: "host"
     volumes:
       - /var/log/ftcloud/yw:/var/log/ftcloud/yw

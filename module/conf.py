@@ -4,13 +4,13 @@ import hashlib
 # dockhub镜像仓库地址
 REGISTRY_URL = '119.254.93.246:15005'
 
-# 对外服务端口号
-Y_J_envt_base = "3306 4396 5010 5016 5671 5672 6010 9091 15671 15672 25672 6379 8300-8302 8400 8500 8080 8686 8070 17082 17086 16006 27016 27017 27018 27019 18080 11000 13001 11001 10086"
-Zy_Management = "5010 5011 6000 5012 8066 30000 30010 30011 30012 30013 30014 30015 30017 30018 30019 30020 30021 30022"
-CMDB_Management = "10006 10007 10008 10009"
-Operation_Management = "8080 8686 5016 6010 5013"
-File_Server = "22122 8888"
-ALL_Port = Y_J_envt_base + Zy_Management + CMDB_Management + Operation_Management + File_Server
+# 对外服务端口号,注意每行后面有个空格。
+Y_J_envt_base = "3306 4396 5010 5016 5671 5672 6010 9091 15671 15672 25672 6379 8300-8302 8400 8500 8080 8686 8070 17082 17086 16006 27016 27017 27018 27019 18080 11000 13001 11001 10086 "
+Zy_Management = "5010 5011 6000 5012 8066 30000 30010 30011 30012 30013 30014 30015 30017 30018 30019 30020 30021 30022 "
+CMDB_Management = "10006 10007 10008 10009 "
+Operation_Management = "8080 8686 5016 6010 5013 "
+File_Server = "22122 8888 "
+ALL_TCP_Port = Y_J_envt_base + Zy_Management + CMDB_Management + Operation_Management + File_Server
 UDP_PORTS = "8301 8302 53"
 
 # mysql服务
@@ -70,7 +70,6 @@ nginx_conf = "/etc/nginx"
 nginx_log = "/var/log/nginx"
 nginx_html = "/usr/share/nginx/html"
 
-
 Host_info = '''\
 127.0.0.1 mongodb.service.ftcloud
 127.0.0.1 rabbitmq.service.ftcloud
@@ -120,6 +119,52 @@ Host_info = '''\
 127.0.0.1 resource-cloudmanager.service.ftcloud
 '''
 
+# Linux内核优化
+kernel = '''\
+fs.file-max = 20000000
+vm.overcommit_memory = 1
+net.ipv4.tcp_max_tw_buckets = 1000000
+net.ipv4.tcp_fin_timeout = 30
+net.ipv4.tcp_keepalive_time = 300
+net.ipv4.tcp_keepalive_probes = 3
+net.ipv4.tcp_keepalive_intvl = 30
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_tw_recycle = 1
+net.ipv4.ip_local_port_range = 5000 65000
+net.ipv4.tcp_mem = 786432 1048576 1572864
+net.core.wmem_max = 873200
+net.core.rmem_max = 873200
+net.ipv4.tcp_wmem = 8192 436600 873200
+net.ipv4.tcp_rmem = 32768 436600 873200
+net.core.somaxconn = 10240
+net.core.netdev_max_backlog = 20480
+net.ipv4.tcp_max_syn_backlog = 20480
+net.ipv4.tcp_retries2 = 5
+net.ipv4.conf.lo.arp_ignore = 0
+net.ipv4.conf.lo.arp_announce = 0
+net.ipv4.conf.all.arp_ignore = 0    
+'''
+
+# 文件最大打开数量
+limits = '''\
+* soft noproc 20480
+* hard noproc 20480
+root soft nofile 65535
+root hard nofile 65535
+* soft nofile 65535
+* hard nofile 65535
+'''
+
+# 开机自启动配置
+hugepage = '''\
+if test -f /sys/kernel/mm/transparent_hugepage/enabled; then
+    echo never > /sys/kernel/mm/transparent_hugepage/enabled
+fi
+if test -f /sys/kernel/mm/transparent_hugepage/defrag; then
+    echo never > /sys/kernel/mm/transparent_hugepage/defrag
+fi    
+'''
 
 def get_yml_info(ip):
     manage_ip = ip

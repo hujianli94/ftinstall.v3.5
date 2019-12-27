@@ -2,11 +2,11 @@
   "service": {
     "name": "futong-cm-source-arrangement",
     "tags": ["futong-cm-source-arrangement"],
-    "address": "172.16.61.21",
+    "address": "127.0.0.1",
     "port": 13001,
     "checks": [
       {
-        "http": "http://172.16.61.21:11000/healthy/",
+        "http": "http://127.0.0.1:11000/healthy/",
         "interval": "10s"
       }
     ]

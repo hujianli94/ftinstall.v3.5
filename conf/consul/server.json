@@ -2,11 +2,11 @@
   "service": {
     "name": "futong-cm-monitor-server",
     "tags": ["dev"],
-    "address": "172.16.61.21",
+    "address": "127.0.0.1",
     "port": 13001,
     "checks": [
       {
-        "http": "http://172.16.61.21:13001/health/",
+        "http": "http://127.0.0.1:13001/health/",
         "interval": "10s"
       }
     ]

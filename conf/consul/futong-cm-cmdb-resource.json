@@ -2,11 +2,11 @@
   "service": {
     "name": "futong-cm-cmdb-resource",
     "tags": ["futong-cm-cmdb-resource"],
-    "address": "172.16.61.21",
+    "address": "127.0.0.1",
     "port": 10007,
     "checks": [
       {
-        "http": "http://172.16.61.21:10007/check/cmdb-resource/",
+        "http": "http://127.0.0.1:10007/check/cmdb-resource/",
         "interval": "10s"
       }
     ]

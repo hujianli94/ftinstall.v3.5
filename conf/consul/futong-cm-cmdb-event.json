@@ -2,11 +2,11 @@
   "service": {
     "name": "futong-cm-cmdb-event",
     "tags": ["futong-cm-cmdb-event"],
-    "address": "172.16.61.21",
+    "address": "127.0.0.1",
     "port": 10009,
     "checks": [
       {
-        "http": "http://172.16.61.21:10009/check/cmdb-event/",
+        "http": "http://127.0.0.1:10009/check/cmdb-event/",
         "interval": "10s"
       }
     ]
