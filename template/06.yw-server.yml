@@ -5,7 +5,7 @@ services:
 #    build: .
 #    restart: unless-stopped
     network_mode: "host"
-    command: bash -c "python /code/resource_arrangement/manage.py makemigrations && python /code/resource_arrangement/manage.py migrate && cd /code/resource_arrangement && celery -A resource_arrangement worker -l info --detach --pidfile= && uwsgi --ini uwsgi.ini"
+    command: bash -c "python /code/resource_arrangement/manage.py makemigrations app3 && python /code/resource_arrangement/manage.py migrate && cd /code/resource_arrangement && celery -A resource_arrangement worker -l info --detach --pidfile= && uwsgi --ini uwsgi.ini"
 #    command: bash -c "python ./resource_arrangement/manage.py makemigrations && python ./resource_arrangement/manage.py migrate && cd resource_arrangement && uwsgi --ini uwsgi.ini"
 
     volumes:
@@ -16,7 +16,7 @@ services:
   
   futong-cm-blueprint:
     image: {futong-cm-blueprint}
-    command: bash -c "python ./blueprint/manage.py makemigrations && python ./blueprint/manage.py migrate && cd blueprint && celery -A blueprint worker -l info --detach --pidfile= && uwsgi --ini uwsgi.ini"
+    command: bash -c "python ./blueprint/manage.py makemigrations app1 && python ./blueprint/manage.py migrate && cd blueprint && celery -A blueprint worker -l info --detach --pidfile= && uwsgi --ini uwsgi.ini"
 #    command: bash -c "python ./blueprint/manage.py makemigrations && python ./blueprint/manage.py migrate && cd blueprint && uwsgi --ini uwsgi.ini"
 
     volumes:
@@ -45,12 +45,12 @@ services:
       - "13001:13001"
     network_mode: "host"
     container_name: futong_cm_monitor
-    command: bash -c "python /futong_cmp_monitor/manage.py makemigrations app3 && python /futong_cmp_monitor/manage.py migrate && python /futong_cmp_monitor/manage.py runserver 0.0.0.0:13001"
+    command: bash -c "python /futong_cmp_monitor/manage.py makemigrations && python /futong_cmp_monitor/manage.py migrate && python /futong_cmp_monitor/manage.py runserver 0.0.0.0:13001"
   
   scripts-manage:
     image: {scripts-manage}
     restart: unless-stopped
-    command: bash -c "python /code/scripts_manage/manage.py makemigrations app1 && python /code/scripts_manage/manage.py migrate && cd /code/scripts_manage && celery -A scripts_manage worker -l info --detach --pidfile= && python /code/scripts_manage/manage.py runserver 0:10086"
+    command: bash -c "python /code/scripts_manage/manage.py makemigrations && python /code/scripts_manage/manage.py migrate && cd /code/scripts_manage && celery -A scripts_manage worker -l info --detach --pidfile= && python /code/scripts_manage/manage.py runserver 0:10086"
     network_mode: "host"
     volumes:
       - /var/log/ftcloud/yw:/var/log/ftcloud/yw

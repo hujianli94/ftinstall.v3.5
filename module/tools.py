@@ -56,13 +56,22 @@ class CMP_Install_tools:
         self._hugepage()
 
     def _install_docker(self):
+        '''
+        安装docker
+        '''
+
+        '''
         tools.run3_cmd('yum install -y yum-utils device-mapper-persistent-data lvm2 vim')
         tools.run3_cmd('yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo')
         tools.run3_cmd('yum -y install epel-release')
         tools.run3_cmd('yum -y install python-devel')
         tools.run3_cmd("yum -y install gcc gcc-c++ kernel-devel")
         tools.run3_cmd('yum -y install docker-ce ')
-        # _run10_cmd('systemctl start docker && systemctl enable docker')
+        '''
+        # 二进制安装Docker
+        tools.run3_cmd("cd ./lib/docker_rpm/package && rpm -Uvh *.rpm --nodeps --force")
+        tools.run3_cmd(
+            "cd ./lib/ && rpm -Uvh container-selinux-2.107-1.el7_6.noarch.rpm && rpm -Uvh docker-ce-18.03.1.ce-1.el7.centos.x86_64.rpm")
         docker_conf = '/etc/docker/daemon.json'
         # 配置Daemon.json文件
         docker_conf_cont = '''\
@@ -74,22 +83,29 @@ class CMP_Install_tools:
         tools.run3_cmd('docker login %s -u futong -p FuTong+123Me' % conf.REGISTRY_URL)
 
     def _install_docker_compose(self):
-        # 源码安装方式
+        # 源码安装方式1
         # tools.run3_cmd('''curl 'https://bootstrap.pypa.io/get-pip.py' -o /tmp/get-pip.py && python /tmp/get-pip.py &&\
         #  rm -fr /tmp/get-pip.py\
         #  ''')
         # tools.run_cmd(
         #     'sudo curl -L "https://github.com/docker/compose/releases/download/1.25.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose')
-        # tools.run_cmd('sudo chmod +x /usr/local/bin/docker-compose')
-        # tools.run_cmd("sudo echo 'export PATH=$PATH:/usr/local/bin' > /etc/profile.d/docker-compose.sh")
-        # tools.run_cmd("sudo chmod +x /etc/profile.d/docker-compose.sh && source /etc/profile")
-        # pip 安装方式
+        """
+        # pip 安装方式2
         tools.run_cmd("yum -y install python-pip && pip install --upgrade pip")
         tools.run_cmd('sudo pip install futures')
         tools.run_cmd("sudo pip install --ignore-installed requests")
         tools.run_cmd("pip install docker-compose")
+        """
+        '''
+        源码直接安装
+        '''
+        tools.run_cmd("sudo mv ./lib/docker_compose/docker-compose-Linux-x86_64 /usr/local/bin/docker-compose")
+        tools.run_cmd('sudo chmod +x /usr/local/bin/docker-compose')
+        tools.run_cmd("sudo echo 'export PATH=$PATH:/usr/local/bin' > /etc/profile.d/docker-compose.sh")
+        tools.run_cmd("sudo chmod +x /etc/profile.d/docker-compose.sh && source /etc/profile")
 
     def install_base(self):
+        # 离线安装docker和docker-compose
         self._install_docker()
         self._install_docker_compose()
 
@@ -127,6 +143,10 @@ class CMP_Install_tools:
         # 将template/下的的文件写入到path下
         for yml_path, content in yml.items():
             tools.write_file(path + '/%s' % yml_path, content)
+
+    def generate_yml(self):
+        ip = self.ip
+        return self._generate_yml(ip, self.yml_path)
 
     def create_config_dir(self):
         """
@@ -211,7 +231,8 @@ class CMP_Install_tools:
                         # print(mongo_key_name)
                         config_list = ["/etc/mongodb/mongo{0}/keyfile".format(i) for i in range(1, 4)]
                         for mongo_key in config_list:
-                            tools.write_file(mongo_key + "/" + filename.split('/')[-1], open(filename))
+                            # print(mongo_key + "/" + filename.split('/')[-1], filename)
+                            tools.write_file(mongo_key + "/" + filename.split('/')[-1], open(filename).read())
                             tools.run_cmd("chown 999 {}".format(mongo_key + "/" + str(mongo_key_name)))
                             tools.run_cmd("chmod 600 {}".format(mongo_key + "/" + str(mongo_key_name)))
                 elif dirname == "prometheus":
@@ -220,7 +241,6 @@ class CMP_Install_tools:
                 elif dirname == "nginx":
                     filename_split = filename.split("/")
                     nginx_conf_name = conf.nginx_conf + "/" + "/".join(filename_split[4:])
-                    # print(nginx_conf_name, filename)
                     tools.write_file(nginx_conf_name, open(filename).read())
 
     def __Modify_mysql_config(self, filename, one_line_info, old_str, new_str):
@@ -252,7 +272,6 @@ class CMP_Install_tools:
         :param ip:  ip
         :return:
         '''
-        self._generate_yml(ip, self.yml_path)
         Path_name = self.yml_path + "/" + "00.mysql.yml"
         logging.info("***开始启动mysql容器，复制mysql目录到宿主机..，docker-compose启动测试***")
         result = tools.run3_cmd("sudo docker-compose -f %s up -d" % Path_name)
@@ -372,7 +391,8 @@ class CMP_Install_tools:
         导入sql到数据库
         """
         # 导入数据库前先检测mongo集群已经初始化完毕
-        result_mongo_code = self.mongo_init()
+        # result_mongo_code = self.mongo_init()
+        result_mongo_code = 0
         if result_mongo_code == 0:
             mysql_docker_id = tools.exec_cmd("docker ps | grep mariadb|awk '{print $1}'")
             mysql_docker_id = mysql_docker_id[1] if mysql_docker_id[0] == 0 else None
@@ -382,18 +402,19 @@ class CMP_Install_tools:
                 cmd_result = tools.run_cmd(
                     'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
                         mysql_docker_id, db_name))
-                tools.YcCheck(cmd_result, "创建数据库失败,,,,,,,,")
+                # tools.YcCheck(cmd_result, "创建数据库失败,,,,,,,,")
 
                 # 创建额外5个数据库
                 db_names = ["blueprint", "monitoralter", "resource_arrangement", "scripts_data",
                             "apscheduler_cron_data"]
-                for db_name in db_names:
+                for name in db_names:
                     create_db_result = tools.run_cmd(
                         'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
-                            mysql_docker_id, db_name))
-                    tools.YcCheck(create_db_result, "创建数据库失败,,,,,,,,")
+                            mysql_docker_id, name))
+                    # tools.YcCheck(create_db_result, "创建数据库失败,,,,,,,,")
             except Exception as e:
-                print(e)
+                # print(e)
+                pass
             sql_Structure_name = ""
             sql_info = ""
             for root, _, files in os.walk("./db"):
@@ -403,6 +424,7 @@ class CMP_Install_tools:
                         sql_Structure_name = abs_filename
                     else:
                         sql_info = abs_filename
+
             # 先导入表结构
             cmd = tools.run_cmd("docker cp %s %s:/home/" % (sql_Structure_name, mysql_docker_id))
             cmd = tools.run_cmd("docker cp %s %s:/home/" % (sql_info, mysql_docker_id))
@@ -441,7 +463,9 @@ class CMP_Install_tools:
         elif status == True and reverse == False:
             for server in new_dicts:
                 service = server[1]
-                # 开启服务,尝试开启2次
+                # 开启服务,尝试开启2次，跳过00测试yml文件，否则会产生mysql启动00测试的那个mysql。导致服务失败
+                if service.split('.')[0] == "00":
+                    continue
                 logging.info('Start service: %s' % service[:-4])
                 # print(service)
                 tools.run_cmd('docker-compose -f %s/%s up -d' % (self.yml_path, service), retry=2)
@@ -451,6 +475,8 @@ class CMP_Install_tools:
             for server in new_dicts:
                 service = server[1]
                 # 关闭服务，尝试关闭2次
+                if service.split('.')[0] == "00":
+                    continue
                 logging.info('Stop service: %s' % service[:-4])
                 tools.run_cmd("source /etc/profile && docker-compose -f %s/%s down" % (self.yml_path, service), retry=2)
                 time.sleep(3)
@@ -526,15 +552,15 @@ class CMP_Install_tools:
         self.pull_image(self.ip)
         self.create_config_dir()
         self.copy_config_file()
-        # ############服务初始化操作######################################
+        self.generate_yml()         # 此方法拷贝yml文件到/etc/ftcloud/compose
+        ###########服务初始化操作######################################
         self.check_yml_and_config_Mysql(self.ip)
         self.operate_base_service()
         self.import_db_sql()
         self.operate_base_service(status=False)  # 关闭base镜像
-        self.start_all_server()
+        self.start_all_server()  # 启动所有服务 01~09
         self.open_port()
         self.start_file_server()
         self.Update_html()
-        self.stop_all_server()  # 停止所有服务
-        self.restart_all_server()     # 重启所有服务
-
+        # self.stop_all_server()  # 停止所有服务 01~09
+        # self.restart_all_server()  # 重启所有服务 01~09

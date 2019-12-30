@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="59f9d1de-2d03-4acb-9e10-32404ac6b999" name="172.16.72.17" url="http://172.16.72.17">
+        <fileTransfer host="172.16.72.17" port="22" privateKey="C:\Users\18793\Desktop\K8S学习\CS密钥对\hu_k8s_key.pem" rootFolder="/home/centos" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

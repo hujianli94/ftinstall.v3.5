@@ -166,6 +166,7 @@ if test -f /sys/kernel/mm/transparent_hugepage/defrag; then
 fi    
 '''
 
+
 def get_yml_info(ip):
     manage_ip = ip
     erlang_cookie = hashlib.md5()
@@ -189,6 +190,7 @@ def get_yml_info(ip):
             # 'ip': manage_ip
         },
         '02.java-public.yml': {
+            'futong-cm-resource-xxljob': '{0}/resource/{1}'.format(REGISTRY_URL, 'futong-cm-xxljob:1.0.0'),
             'futong-cm-config': '{0}/resource/{1}'.format(REGISTRY_URL, 'futong-cm-config:1.0.0'),
             'futong-cm-zuul': '{0}/resource/{1}'.format(REGISTRY_URL, 'futong-cm-zuul:1.0.0'),
             'futong-cm-sso': '{0}/resource/{1}'.format(REGISTRY_URL, 'futong-cm-sso:1.0.0'),
@@ -199,7 +201,6 @@ def get_yml_info(ip):
             'events_service': '{0}/public/events-service:v1'.format(REGISTRY_URL)
         },
         '04.zy-server.yml': {
-            'futong-cm-resource-xxljob': '{0}/resource/{1}'.format(REGISTRY_URL, 'futong-cm-xxljob:1.0.0'),
             'futong-cm-resource-aggregation': '{0}/resource/{1}'.format(REGISTRY_URL,
                                                                         'futong-cm-resource-aggregation:1.0.0'),
             'futong-cm-resource-compute': '{0}/resource/{1}'.format(REGISTRY_URL,
