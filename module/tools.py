@@ -79,11 +79,11 @@ class CMP_Install_tools:
             tools.run3_cmd("rpm -qa| grep container |xargs rpm -e")
 
         self._copyFiles(self.docker_lib_dir, self.docker_lib_remote_dir, "")
-
         tools.run3_cmd("cd {}/docker_rpm/package && rpm -Uvh *.rpm --nodeps --force".format(self.docker_lib_remote_dir))
-        tools.run_cmd(
-            "cd {}/docker_rpm && rpm -Uvh container-selinux-2.107-1.el7_6.noarch.rpm && rpm -Uvh docker-ce-18.03.1.ce-1.el7.centos.x86_64.rpm".format(
-                self.docker_lib_remote_dir))
+        tools.run_cmd("cd {}/docker_rpm/ && rpm -Uvh container-selinux-2.107-1.el7_6.noarch.rpm".format(
+            self.docker_lib_remote_dir))
+        tools.run_cmd("cd {}/docker_rpm/ && rpm -Uvh docker-ce-18.03.1.ce-1.el7.centos.x86_64.rpm".format(
+            self.docker_lib_remote_dir))
         docker_conf = '/etc/docker/daemon.json'
         # 配置Daemon.json文件
         docker_conf_cont = '''\
@@ -118,8 +118,7 @@ class CMP_Install_tools:
         tools.run_cmd('sudo chmod +x /usr/local/bin/docker-compose')
         tools.run_cmd("sudo echo 'export PATH=$PATH:/usr/local/bin' > /etc/profile.d/docker-compose.sh")
         tools.run_cmd("sudo chmod +x /etc/profile.d/docker-compose.sh && source /etc/profile")
-        if os.path.islink("/usr/bin/docker-compose") == False:
-            tools.run_cmd("ln -s /usr/local/bin/docker-compose /usr/bin/docker-compos")
+        tools.run_cmd("rm -rf /usr/bin/docker-compose && ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose")
 
     def install_base(self):
         # 离线安装docker和docker-compose
@@ -566,7 +565,7 @@ class CMP_Install_tools:
         # ####### 初始化############################
         self.init_system()
         self.install_base()
-        self.pull_image(self.ip)
+        # self.pull_image(self.ip)
         self.create_config_dir()
         self.copy_config_file()
         self.generate_yml()  # 此方法拷贝yml文件到/etc/ftcloud/compose
@@ -579,5 +578,5 @@ class CMP_Install_tools:
         self.open_port()
         self.start_file_server()
         self.Update_html()
-        # self.stop_all_server()  # 停止所有服务 01~09
+        self.stop_all_server()  # 停止所有服务 01~09
         # self.restart_all_server()  # 重启所有服务 01~09
