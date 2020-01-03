@@ -73,6 +73,7 @@ services:
     command: agent -server -bind=127.0.0.1 -client=0.0.0.0 -node=auto -bootstrap-expect=1 -ui
     network_mode: "host"
 
+
 #  mongo:
 #    restart: unless-stopped
 #    image: mongo:4.2.0

@@ -1,10 +1,9 @@
-# 安装部署命令
+# 单机版本安装部署命令
 ```
-python __main__.py xxx.xxx.xxx【IP地址】
+python __main__.py xxx.xxx.xxx
 ```
 
 ## config.py为配置文件。
-
 配置相应的参数：端口、文件名称可以修改config.py
 
 
