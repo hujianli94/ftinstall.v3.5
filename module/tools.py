@@ -13,11 +13,11 @@ from utility import Base_Tools as tools
 class CMP_Install_tools:
     # 类属性，获取ip
     ip = tools.get_ip()
-    script = "./module/"
+    script = "./module"
     html_path = "./html/"
     yml_path = '/etc/ftcloud/compose'  # type: str
-    docker_lib_dir = "./lib/"
-    docker_lib_remote_dir = "/home/docker_install"
+    LIB_DIR = "./lib/"
+    LIB_REMOTE_DIR = "/home/lib"
 
     def __init__(self):
         pass
@@ -70,20 +70,11 @@ class CMP_Install_tools:
         tools.run3_cmd("yum -y install gcc gcc-c++ kernel-devel")
         tools.run3_cmd('yum -y install docker-ce ')
         '''
-        # 安装前先卸载docker
-        result = tools.exec_cmd("rpm -qa| grep docker|wc -l")
-        if result[1] != "0":
-            print("\033[32m*******************alrady install docker.....************************\033[0m")
-            print("\033[32m*******************开始卸载docker程序********************************\033[0m")
-            tools.run3_cmd("rpm -qa| grep docker |xargs rpm -e")
-            tools.run3_cmd("rpm -qa| grep container |xargs rpm -e")
+        # 赋值本地lib路径到/home/lib下
+        print("开始复制文件".center(100, "*"))
+        self._copyFiles(self.LIB_DIR, self.LIB_REMOTE_DIR, "")
 
-        self._copyFiles(self.docker_lib_dir, self.docker_lib_remote_dir, "")
-        tools.run3_cmd("cd {}/docker_rpm/package && rpm -Uvh *.rpm --nodeps --force".format(self.docker_lib_remote_dir))
-        tools.run_cmd("cd {}/docker_rpm/ && rpm -Uvh container-selinux-2.107-1.el7_6.noarch.rpm".format(
-            self.docker_lib_remote_dir))
-        tools.run_cmd("cd {}/docker_rpm/ && rpm -Uvh docker-ce-18.03.1.ce-1.el7.centos.x86_64.rpm".format(
-            self.docker_lib_remote_dir))
+        tools.run3_cmd("cd {}/docker_rpm/docker-ce-19/ && yum localinstall *.rpm -y".format(self.LIB_REMOTE_DIR))
         docker_conf = '/etc/docker/daemon.json'
         # 配置Daemon.json文件
         docker_conf_cont = '''\
@@ -113,17 +104,29 @@ class CMP_Install_tools:
         '''
 
         tools.run_cmd(
-            "sudo mv {}/docker_rpm/docker_compose/docker-compose-Linux-x86_64 /usr/local/bin/docker-compose".format(
-                self.docker_lib_remote_dir))
+            "rm -rf /usr/local/bin/docker-compose && sudo mv {}/docker_rpm/docker_compose/docker-compose-Linux-x86_64 /usr/local/bin/docker-compose".format(
+                self.LIB_REMOTE_DIR))
         tools.run_cmd('sudo chmod +x /usr/local/bin/docker-compose')
         tools.run_cmd("sudo echo 'export PATH=$PATH:/usr/local/bin' > /etc/profile.d/docker-compose.sh")
         tools.run_cmd("sudo chmod +x /etc/profile.d/docker-compose.sh && source /etc/profile")
         tools.run_cmd("rm -rf /usr/bin/docker-compose && ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose")
 
+    def _install_pip(self):
+        pip_install_status = True
+        # 安装pip
+        tools.run3_cmd("cd {0}/base_lib/pip_rpm/ && rpm -ivh *.rpm".format(self.LIB_REMOTE_DIR))
+
+        # 安装futures,多线程模块
+        if pip_install_status:
+            tools.run3_cmd("cd {0}/base_lib/futures/ && pip install *.whl".format(self.LIB_REMOTE_DIR))
+        else:
+            return pip_install_status
+
     def install_base(self):
-        # 离线安装docker和docker-compose
+        # 离线安装docker和docker-compose、pip
         self._install_docker()
         self._install_docker_compose()
+        self._install_pip()
 
     def pull_image(self, ip):
         '''
@@ -217,7 +220,7 @@ class CMP_Install_tools:
             print("Start creating {} corresponding directories".format(Create_dir))
             for dir_name, dir in dirs.items():
                 for i in dir:
-                    tools.mkdirs(i, 999)
+                    tools.mkdirs(i, 999, 999)
                     print("Service name {} create directory {}".format(dir_name, i))
 
     def copy_config_file(self):
@@ -301,6 +304,7 @@ class CMP_Install_tools:
         # 修改my.cnf文件内容
         self.__Modify_mysql_config(mysql_file, "#default-character-set = utf8", "#", "")
         self.__Modify_mysql_config(mariadb_file, "#default-character-set = utf8", "#", "")
+
         # 关闭mysql服务
         close_mysql = tools.run_cmd("docker-compose -f %s down" % Path_name)
         tools.YcCheck(close_mysql, "docker-compose -f %s down fail....." % Path_name)
@@ -342,6 +346,7 @@ class CMP_Install_tools:
                                       shell=True)
                 with open("./rabbitmq_status.txt") as f:
                     s = f.readlines()
+                    print(s[2])
                     pid_info = s[1].strip("[").strip("{").split(",")[0]
                     if pid_info == "pid":
                         print("\033[32m ------------------ rabbitmq 容器服务启动成功. ------------------------------\033[0m")
@@ -358,7 +363,7 @@ class CMP_Install_tools:
                         break
                     else:
                         print("\033[33m ------------------ rabbitmq docker 服务器启动中 ------------------------ \033[0m")
-                        n += 1
+                    n += 1
 
     def mongo_init(self):
         # 获取rabbitmq服务初始化状态，如果初始化完毕，则开始配置mongo集群
@@ -367,8 +372,11 @@ class CMP_Install_tools:
             mongo_master = "mongo1"
             tools.run_cmd("chmod 755 %s/%s" % (self.script, "mongo_init.sh"))
             tools.run_cmd("docker cp %s/%s %s:/" % (self.script, "mongo_init.sh", mongo_master))
-            result = tools.run_cmd("docker exec -i %s /bin/bash /mongo_init.sh" % mongo_master)
-            tools.YcCheck(result, "***配置 mongo.sh 集群失败****")
+            try:
+                result = tools.run_cmd("docker exec -i %s /bin/bash /mongo_init.sh" % mongo_master)
+            except:
+                print("\033[31m集群已经初始化完毕.此处需要检查.............\033[0m")
+                time.sleep(2)
             # 去掉mongo集群中的注释
             for root, _, files in os.walk("/etc/mongodb"):
                 for file in files:
@@ -391,6 +399,9 @@ class CMP_Install_tools:
                                 elif re.match("#  keyFile:", line_head):
                                     line3 = line_head.replace("#  keyFile:", "  keyFile:")
                                     sub_info += line3
+                            # 如果已经修改过了,就直接跳出
+                            if re.match("^security:", line_head):
+                                break
                     config_mongo = old_info + sub_info
                     # 备份文件
                     tools.write_file(filename + "_bak", old_info)
@@ -427,9 +438,7 @@ class CMP_Install_tools:
                     create_db_result = tools.run_cmd(
                         'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
                             mysql_docker_id, name))
-                    # tools.YcCheck(create_db_result, "创建数据库失败,,,,,,,,")
             except Exception as e:
-                # print(e)
                 pass
             sql_Structure_name = ""
             sql_info = ""
@@ -445,15 +454,14 @@ class CMP_Install_tools:
             cmd = tools.run_cmd("docker cp %s %s:/home/" % (sql_Structure_name, mysql_docker_id))
             cmd = tools.run_cmd("docker cp %s %s:/home/" % (sql_info, mysql_docker_id))
             tools.YcCheck(cmd, "数据传输入异常，请检查....")
-            cmd = tools.run_cmd(
-                'docker exec -it %s mysql -uroot -phello %s -e"source /home/%s;"' % (
-                    mysql_docker_id, db_name, sql_Structure_name.split('/')[4]))
+            cmd = tools.run_cmd('docker exec -it %s mysql -uroot -phello %s -e"source /home/%s;"' % (
+                mysql_docker_id, db_name, sql_Structure_name.split('/')[-1]))
             tools.YcCheck(cmd, "导入表结构异常,请检查.......")
 
             # 再导入表初始化数据
             cmd = tools.run_cmd(
                 'docker exec -it %s mysql -uroot -phello %s -e"source /home/%s;"' % (
-                    mysql_docker_id, db_name, sql_info.split('/')[4]))
+                    mysql_docker_id, db_name, sql_info.split('/')[-1]))
             tools.YcCheck(cmd, "导入表结构异常,请检查.......")
             print(
                 "\033[32m ---------------------------------------------- 导入数据库完毕 ------------------------------------------\033[0m")
@@ -565,18 +573,19 @@ class CMP_Install_tools:
         # ####### 初始化############################
         self.init_system()
         self.install_base()
-        # self.pull_image(self.ip)
+        self.pull_image(self.ip)
         self.create_config_dir()
         self.copy_config_file()
         self.generate_yml()  # 此方法拷贝yml文件到/etc/ftcloud/compose
-        ###########服务初始化操作######################################
+        # ###########服务初始化操作######################################
         self.check_yml_and_config_Mysql(self.ip)
-        self.operate_base_service()
+        self.operate_base_service()  # 启动base镜像
         self.import_db_sql()
         self.operate_base_service(status=False)  # 关闭base镜像
         self.start_all_server()  # 启动所有服务 01~09
         self.open_port()
         self.start_file_server()
         self.Update_html()
-        self.stop_all_server()  # 停止所有服务 01~09
+        self.restart_all_server()  # 重启所有服务 01~09
+        # self.stop_all_server()  # 停止所有服务 01~09
         # self.restart_all_server()  # 重启所有服务 01~09

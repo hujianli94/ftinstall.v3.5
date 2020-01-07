@@ -117,6 +117,7 @@ Host_info = '''\
 127.0.0.1 pushgateway.service.ftcloud
 127.0.0.1 cm.consul.url
 127.0.0.1 resource-cloudmanager.service.ftcloud
+127.0.0.1 futong-cm-resource-virtualization
 '''
 
 # Linux内核优化

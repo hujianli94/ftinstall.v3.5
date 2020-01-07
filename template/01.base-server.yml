@@ -51,6 +51,7 @@ services:
       - /usr/local/etc/redis/redis.conf
     network_mode: "host"
 
+
   consul:
     restart: unless-stopped
     image: {consul}

@@ -1,6 +1,6 @@
 # 单机版本安装部署命令
 ```
-python __main__.py xxx.xxx.xxx
+python __main__.py 
 ```
 
 ## config.py为配置文件。
