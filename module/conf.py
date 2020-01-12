@@ -6,7 +6,7 @@ REGISTRY_URL = '119.254.93.246:15005'
 
 # 对外服务端口号,注意每行后面有个空格。
 Y_J_envt_base = "30023 3306 4396 5010 5016 5671 5672 6010 9091 15671 15672 25672 6379 8300-8302 8400 8500 8080 8686 8070 17082 17086 16006 27016 27017 27018 27019 18080 11000 13001 11001 10086 "
-Zy_Management = "5010 5011 6000 5012 8066 30000 30010 30011 30012 30013 30014 30015 30017 30018 30019 30020 30021 30022 "
+Zy_Management = "4822 5010 5011 6000 5012 8066 30000 30010 30011 30012 30013 30014 30015 30017 30018 30019 30020 30021 30022 "
 CMDB_Management = "10006 10007 10008 10009 "
 Operation_Management = "8080 8686 5016 6010 5013 "
 File_Server = "22122 8888 "
@@ -70,6 +70,10 @@ nginx_conf = "/etc/nginx"
 nginx_log = "/var/log/nginx"
 nginx_html = "/usr/share/nginx/html"
 
+
+## ft配置目录
+Ft_DIR = "/etc/ftcloud"
+
 Host_info = '''\
 127.0.0.1 mongodb.service.ftcloud
 127.0.0.1 rabbitmq.service.ftcloud
@@ -119,6 +123,8 @@ Host_info = '''\
 127.0.0.1 resource-cloudmanager.service.ftcloud
 127.0.0.1 futong-cm-resource-virtualization
 '''
+
+
 
 # Linux内核优化
 kernel = '''\
@@ -214,6 +220,7 @@ def get_yml_info(ip):
             'futong-cm-resource-rds': '{0}/resource/{1}'.format(REGISTRY_URL, 'futong-cm-resource-rds:1.0.0'),
             'futong-cm-resource-nat': '{0}/resource/{1}'.format(REGISTRY_URL, 'futong-cm-resource-nat:1.0.0'),
             'guacd': '{0}/resource/{1}'.format(REGISTRY_URL, 'guacd:1.0.0'),
+            'futong-cm-resource-cm': "{0}/resource/{1}".format(REGISTRY_URL, 'futong-cm-resource-cm:4.7.0'),
             'futong-cm-resource-elb': '{0}/resource/{1}'.format(REGISTRY_URL, 'futong-cm-resource-elb:1.0.0'),
             'futong-cm-resource-cdn': '{0}/resource/{1}'.format(REGISTRY_URL, 'futong-cm-resource-cdn:1.0.0'),
             'futong-cm-resource-routetable': '{0}/resource/{1}'.format(REGISTRY_URL,

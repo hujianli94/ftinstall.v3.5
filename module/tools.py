@@ -15,9 +15,9 @@ class CMP_Install_tools:
     ip = tools.get_ip()
     script = "./module"
     html_path = "./html/"
-    yml_path = '/etc/ftcloud/compose'  # type: str
-    LIB_DIR = "./lib/"
-    LIB_REMOTE_DIR = "/home/lib"
+    yml_path = conf.Ft_DIR + '/compose'  # type: str
+    LIB_DIR = "./lib"
+    LIB_REMOTE_DIR = "/tmp/lib/"
 
     def __init__(self):
         pass
@@ -49,6 +49,17 @@ class CMP_Install_tools:
         tools.run_cmd('echo never > /sys/kernel/mm/transparent_hugepage/enabled')
         tools.run_cmd('echo never > /sys/kernel/mm/transparent_hugepage/defrag')
 
+    def _copy_lib_file(self):
+        """
+        拷贝本地lib路径到/home/lib下
+        :return:
+        """
+        print("开始复制文件".center(100, "*"))
+        self._copyFiles(self.LIB_DIR, self.LIB_REMOTE_DIR, "")
+        tools.write_file("/etc/cron.d/logcron", open(self.LIB_REMOTE_DIR + "/" + "logcron").read(), u=999)
+        tools.write_file(conf.Ft_DIR + "/" + "logrotate.conf",
+                         open(self.LIB_REMOTE_DIR + "/" + "logrotate.conf").read())
+
     def init_system(self):
         # _ulimits()
         self._change_Hostname()
@@ -56,6 +67,7 @@ class CMP_Install_tools:
         self._kernel()
         self._security()
         self._hugepage()
+        self._copy_lib_file()
 
     def _install_docker(self):
         '''
@@ -70,10 +82,6 @@ class CMP_Install_tools:
         tools.run3_cmd("yum -y install gcc gcc-c++ kernel-devel")
         tools.run3_cmd('yum -y install docker-ce ')
         '''
-        # 赋值本地lib路径到/home/lib下
-        print("开始复制文件".center(100, "*"))
-        self._copyFiles(self.LIB_DIR, self.LIB_REMOTE_DIR, "")
-
         tools.run3_cmd("cd {}/docker_rpm/docker-ce-19/ && yum localinstall *.rpm -y".format(self.LIB_REMOTE_DIR))
         docker_conf = '/etc/docker/daemon.json'
         # 配置Daemon.json文件
@@ -207,7 +215,8 @@ class CMP_Install_tools:
                                                                conf.Resource_management_log + "futong-cm-resource-esi",
                                                                conf.Resource_management_log + "futong-cm-resource-network",
                                                                conf.Resource_management_log + "futong-cm-resource-rds",
-                                                               conf.Resource_management_log + "futong-cm-resource-nat"
+                                                               conf.Resource_management_log + "futong-cm-resource-nat",
+                                                               conf.Resource_management_log + "futong-cm-resource-cm",
                                                                ]},
                        "Nginx": {"Nginx_dir": [conf.nginx_conf, conf.nginx_log, conf.nginx_html]},
 
@@ -215,13 +224,13 @@ class CMP_Install_tools:
 
         # 创建目录
         for Create_dir, dirs in Create_dirs.items():
-            print("")
-            print("-" * 60)
-            print("Start creating {} corresponding directories".format(Create_dir))
+            logging.info("")
+            logging.info("-" * 60)
+            logging.info("Start creating {} corresponding directories".format(Create_dir))
             for dir_name, dir in dirs.items():
                 for i in dir:
                     tools.mkdirs(i, 999, 999)
-                    print("Service name {} create directory {}".format(dir_name, i))
+                    logging.info("Service name {} create directory {}".format(dir_name, i))
 
     def copy_config_file(self):
         """
@@ -337,7 +346,7 @@ class CMP_Install_tools:
         # 获取base服务开启状态，如果base开启了，则开始初始化rabbitmq
         start_base_code = self.operate_base_service()
         if start_base_code == 0:
-            print(
+            logging.info(
                 "\033[32m ----------------------------开始初始化rabbitmq_vhost --------------------------------------------\033[0m")
             rabbmq_ids = tools.exec_cmd("docker ps | grep rabbitmq:3.7.17-management|awk '{print $1}'")
             rabbmq_id = rabbmq_ids[1] if rabbmq_ids[0] == 0 else None
@@ -346,10 +355,10 @@ class CMP_Install_tools:
                                       shell=True)
                 with open("./rabbitmq_status.txt") as f:
                     s = f.readlines()
-                    print(s[2])
                     pid_info = s[1].strip("[").strip("{").split(",")[0]
                     if pid_info == "pid":
-                        print("\033[32m ------------------ rabbitmq 容器服务启动成功. ------------------------------\033[0m")
+                        logging.info(
+                            "\033[32m ------------------ rabbitmq 容器服务启动成功. ------------------------------\033[0m")
                         tools.run3_cmd("docker exec -it %s rabbitmqctl add_vhost /" % rabbmq_id)
                         tools.run3_cmd("docker exec -it %s rabbitmqctl add_vhost /resource" % rabbmq_id)
                         tools.run3_cmd("docker exec -it %s rabbitmqctl add_vhost resource" % rabbmq_id)
@@ -362,7 +371,8 @@ class CMP_Install_tools:
                         return result
                         break
                     else:
-                        print("\033[33m ------------------ rabbitmq docker 服务器启动中 ------------------------ \033[0m")
+                        logging.info(
+                            "\033[33m ------------------ rabbitmq docker 服务器启动中 ------------------------ \033[0m")
                     n += 1
 
     def mongo_init(self):
@@ -375,8 +385,8 @@ class CMP_Install_tools:
             try:
                 result = tools.run_cmd("docker exec -i %s /bin/bash /mongo_init.sh" % mongo_master)
             except:
-                print("\033[31m集群已经初始化完毕.此处需要检查.............\033[0m")
-                time.sleep(2)
+                logging.info("\033[31m集群已经初始化完毕.此处需要检查.............\033[0m")
+                time.sleep(5)
             # 去掉mongo集群中的注释
             for root, _, files in os.walk("/etc/mongodb"):
                 for file in files:
@@ -463,7 +473,7 @@ class CMP_Install_tools:
                 'docker exec -it %s mysql -uroot -phello %s -e"source /home/%s;"' % (
                     mysql_docker_id, db_name, sql_info.split('/')[-1]))
             tools.YcCheck(cmd, "导入表结构异常,请检查.......")
-            print(
+            logging.info(
                 "\033[32m ---------------------------------------------- 导入数据库完毕 ------------------------------------------\033[0m")
         else:
             raise Exception("导入数据库失败")
@@ -555,7 +565,7 @@ class CMP_Install_tools:
                     continue
                 if not os.path.exists(targetDir):
                     os.makedirs(targetDir)
-                print("copy file from", sourceF, "to", targetF)
+                logging.info("copy file {} to {}".format(sourceF, targetDir))
                 shutil.copy2(sourceF, targetF)
             if os.path.isdir(sourceF):
                 self._copyFiles(sourceF, targetF, ignoreStart)
