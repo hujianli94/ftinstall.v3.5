@@ -6,7 +6,7 @@ services:
         # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
         image: {futong-cm-resource-xxljob}
         ports:
-            - "30010:30010"
+            - "30000:30000"
         network_mode: "host"
         container_name: futong_cm_resource_xxljob
         volumes:

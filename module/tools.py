@@ -75,6 +75,7 @@ class CMP_Install_tools:
         '''
 
         '''
+        # yum的方式安装docker
         tools.run3_cmd('yum install -y yum-utils device-mapper-persistent-data lvm2 vim')
         tools.run3_cmd('yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo')
         tools.run3_cmd('yum -y install epel-release')
@@ -82,6 +83,8 @@ class CMP_Install_tools:
         tools.run3_cmd("yum -y install gcc gcc-c++ kernel-devel")
         tools.run3_cmd('yum -y install docker-ce ')
         '''
+
+        # 二进制安装docker
         tools.run3_cmd("cd {}/docker_rpm/docker-ce-19/ && yum localinstall *.rpm -y".format(self.LIB_REMOTE_DIR))
         docker_conf = '/etc/docker/daemon.json'
         # 配置Daemon.json文件
@@ -90,27 +93,28 @@ class CMP_Install_tools:
     ''' % conf.REGISTRY_URL
         tools.write_file(docker_conf, docker_conf_cont)
         tools.run3_cmd('systemctl start docker && systemctl enable docker')
-        # _run10_cmd('systemctl restart docker')
         tools.run3_cmd('docker login %s -u futong -p FuTong+123Me' % conf.REGISTRY_URL)
 
     def _install_docker_compose(self):
-        # 源码安装方式1
-        # tools.run3_cmd('''curl 'https://bootstrap.pypa.io/get-pip.py' -o /tmp/get-pip.py && python /tmp/get-pip.py &&\
-        #  rm -fr /tmp/get-pip.py\
-        #  ''')
-        # tools.run_cmd(
-        #     'sudo curl -L "https://github.com/docker/compose/releases/download/1.25.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose')
+
         """
+        # 源码安装方式1
+        tools.run3_cmd('''curl 'https://bootstrap.pypa.io/get-pip.py' -o /tmp/get-pip.py && python /tmp/get-pip.py &&\
+        rm -fr /tmp/get-pip.py\
+         ''')
+        tools.run_cmd(
+        'sudo curl -L "https://github.com/docker/compose/releases/download/1.25.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose')
+        """
+
+        '''
         # pip 安装方式2
         tools.run_cmd("yum -y install python-pip && pip install --upgrade pip")
         tools.run_cmd('sudo pip install futures')
         tools.run_cmd("sudo pip install --ignore-installed requests")
         tools.run_cmd("pip install docker-compose")
-        """
-        '''
-        源码直接安装
         '''
 
+        # 使用源码直接安装
         tools.run_cmd(
             "rm -rf /usr/local/bin/docker-compose && sudo mv {}/docker_rpm/docker_compose/docker-compose-Linux-x86_64 /usr/local/bin/docker-compose".format(
                 self.LIB_REMOTE_DIR))
@@ -428,18 +432,17 @@ class CMP_Install_tools:
         导入sql到数据库
         """
         # 导入数据库前先检测mongo集群已经初始化完毕
-        # result_mongo_code = self.mongo_init()
-        result_mongo_code = 0
+        result_mongo_code = self.mongo_init()
+        db_name = "mycat_futong_db"
         if result_mongo_code == 0:
             mysql_docker_id = tools.exec_cmd("docker ps | grep mariadb|awk '{print $1}'")
             mysql_docker_id = mysql_docker_id[1] if mysql_docker_id[0] == 0 else None
             # 创建mycat_futong_db数据库,若有数据库直接在这里抛出异常
             try:
-                db_name = "mycat_futong_db"  # type: str
                 cmd_result = tools.run_cmd(
                     'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
                         mysql_docker_id, db_name))
-                # tools.YcCheck(cmd_result, "创建数据库失败,,,,,,,,")
+                tools.YcCheck(cmd_result, "创建数据库失败,,,,,,,,")
 
                 # 创建额外5个数据库
                 db_names = ["blueprint", "monitoralter", "resource_arrangement", "scripts_data",
@@ -449,9 +452,10 @@ class CMP_Install_tools:
                         'docker exec -it %s mysql -uroot -phello -e"create database %s default charset=utf8;"' % (
                             mysql_docker_id, name))
             except Exception as e:
-                pass
-            sql_Structure_name = ""
-            sql_info = ""
+                print(e)
+
+            sql_Structure_name = ""  # 定义数据库表结构的文件名称
+            sql_info = ""  # 定义数据库初始化数据sql名称
             for root, _, files in os.walk("./db"):
                 for file in files:
                     abs_filename = os.path.abspath(os.path.join(root, file))

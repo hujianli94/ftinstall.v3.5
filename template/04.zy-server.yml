@@ -86,16 +86,15 @@ services:
     container_name: futong_cm_resource_guacd
 
 
-  services:
-    futong-cm-resource-cm:
-      # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
-      image: {futong-cm-resource-cm}
-      ports:
-        - "30023:30023"
-      network_mode: "host"
-      privileged: true
-      volumes:
-        - /var/log/ftcloud/zy/futong-cm-resource-cm:/opt/abiquo/tomcat/logs
-        - /var/log/ftcloud/zy/futong-cm-resource-cm:/var/log/httpd
-      container_name: futong_cm_resource_cm
-      command: "/usr/sbin/init && chown -R tomcat:root /opt/abiquo/tomcat/logs"
+  futong-cm-resource-cm:
+    # 从指定的镜像中启动容器，可以是存储仓库、标签以及镜像 ID，如果镜像不存在，Compose 会自动拉去镜像;
+    image: {futong-cm-resource-cm}
+    ports:
+      - "30023:30023"
+    network_mode: "host"
+    privileged: true
+    volumes:
+      - /var/log/ftcloud/zy/futong-cm-resource-cm:/opt/abiquo/tomcat/logs
+      - /var/log/ftcloud/zy/futong-cm-resource-cm:/var/log/httpd
+    container_name: futong_cm_resource_cm
+    command: "/usr/sbin/init && chown -R tomcat:root /opt/abiquo/tomcat/logs"

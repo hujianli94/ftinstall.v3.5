@@ -16,13 +16,13 @@ services:
   
   futong-cm-blueprint:
     image: {futong-cm-blueprint}
-    command: bash -c "python ./blueprint/manage.py makemigrations app1 && python ./blueprint/manage.py migrate && cd blueprint && celery -A blueprint worker -l info --detach --pidfile= && uwsgi --ini uwsgi.ini"
-#    command: bash -c "python ./blueprint/manage.py makemigrations && python ./blueprint/manage.py migrate && cd blueprint && uwsgi --ini uwsgi.ini"
-
+#    command: bash -c "python ./blueprint/manage.py makemigrations app1 && python ./blueprint/manage.py migrate && cd blueprint && uwsgi --ini uwsgi.ini"
+    command: bash -c "python ./blueprint/manage.py makemigrations app1 && python ./blueprint/manage.py migrate && cd blueprint && celery -A blueprint worker -B -l info -f celery.log -n blueprint.%h -D && uwsgi --ini uwsgi.ini"
     volumes:
       - /var/log/ftcloud/yw:/var/log/ftcloud/yw
     ports:
       - "11001:11001"
+    container_name: "futong-cm-blueprint"
     restart: unless-stopped
     network_mode: "host"
   
