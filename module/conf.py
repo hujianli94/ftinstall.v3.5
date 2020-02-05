@@ -70,7 +70,6 @@ nginx_conf = "/etc/nginx"
 nginx_log = "/var/log/nginx"
 nginx_html = "/usr/share/nginx/html"
 
-
 ## ft配置目录
 Ft_DIR = "/etc/ftcloud"
 
@@ -123,8 +122,6 @@ Host_info = '''\
 127.0.0.1 resource-cloudmanager.service.ftcloud
 127.0.0.1 futong-cm-resource-virtualization
 '''
-
-
 
 # Linux内核优化
 kernel = '''\
